@@ -116,5 +116,40 @@
         "hours": "jam",
         "days": "hari",
         "forever": "selamanya"
+    },
+    "broadcast": {
+        "not_owner": "Perintah ini hanya tersedia untuk pemilik bot.",
+        "start": "**Broadcast Pesan**\n\nKirimkan pesan yang ingin Anda broadcast ke semua pengguna.\n\nAnda dapat mengirim:\n- Pesan teks\n- Foto dengan caption\n\nTotal pengguna aktif: **{count}**\n\nPesan akan otomatis di-pin di chat setiap pengguna selama 24 jam.",
+        "cancel_btn": "Batal",
+        "confirm_btn": "Kirim Broadcast",
+        "invalid_content": "Silakan kirim pesan teks atau foto dengan caption.",
+        "preview": "**Preview Broadcast**\n\nPesan ini akan dikirim ke **{count}** pengguna:",
+        "cancelled": "Broadcast dibatalkan.",
+        "error": "Terjadi kesalahan. Silakan coba lagi.",
+        "sending": "Mengirim broadcast... Mohon tunggu.",
+        "complete": "**Broadcast Selesai!**\n\nTotal: {total} pengguna\nBerhasil: {success}\nGagal: {failed}"
+    },
+    "premium": {
+        "intro": "**Langganan Premium**\n\nDapatkan fitur eksklusif dengan Premium!\n\n**Fitur Premium:**\n{features}\n\nKlik tombol di bawah untuk melihat paket yang tersedia.",
+        "active_status": "**Premium Aktif**\n\nPaket Anda: **{plan}**\nBerakhir: **{end_date}**\nSisa Hari: **{days_left}** hari\n\nTerima kasih atas dukungan Anda!",
+        "select_plan": "**Pilih Paket Premium**\n\nPilih paket langganan yang Anda inginkan:\n\nSemua paket termasuk akses penuh ke fitur premium.",
+        "view_plans_btn": "Lihat Paket",
+        "extend_btn": "Perpanjang Langganan",
+        "close_btn": "Tutup",
+        "back_btn": "Kembali",
+        "invalid_plan": "Paket yang dipilih tidak valid.",
+        "payment_not_configured": "Sistem pembayaran belum dikonfigurasi. Silakan hubungi support.",
+        "creating_invoice": "Membuat invoice pembayaran...",
+        "invoice_error": "Gagal membuat invoice pembayaran. Silakan coba lagi nanti.",
+        "payment_info": "**Detail Pembayaran**\n\nPaket: **{plan}**\nHarga: **${price} USDT**\nDurasi: **{duration} hari**\n\nKlik 'Bayar Sekarang' untuk melanjutkan pembayaran via CryptoBot.\n\nSetelah pembayaran, klik 'Cek Pembayaran' untuk mengaktifkan premium Anda.",
+        "pay_btn": "Bayar Sekarang",
+        "check_payment_btn": "Cek Pembayaran",
+        "cancel_btn": "Batal",
+        "invalid_data": "Data pembayaran tidak valid.",
+        "payment_success": "**Pembayaran Berhasil!**\n\nLangganan Premium Anda sekarang aktif.\n\nPaket: **{plan}**\nDurasi: **{duration} hari**\n\nTerima kasih atas pembelian Anda! Nikmati semua fitur premium.",
+        "processing_error": "Error memproses pembayaran. Silakan coba lagi.",
+        "payment_pending": "Pembayaran belum diterima. Silakan selesaikan pembayaran terlebih dahulu.",
+        "payment_expired": "Invoice pembayaran telah kedaluwarsa. Silakan buat pembayaran baru.",
+        "check_error": "Error mengecek status pembayaran. Silakan coba lagi."
     }
 }

@@ -13,3 +13,6 @@ aiohttp==3.9.1
 
 # Additional utilities
 httpx==0.26.0
+
+# CryptoBot Payment Gateway (Crypto Pay API)
+aiocryptopay==0.4.3

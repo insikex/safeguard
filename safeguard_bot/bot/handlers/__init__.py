@@ -4,7 +4,7 @@ Handlers Package
 Contains all handler modules for the Safeguard Bot.
 """
 
-from .start import start_command, help_command, rules_command, mystatus_command
+from .start import start_command, help_command, rules_command, mystatus_command, start_callback
 from .admin import (
     warn_command,
     unwarn_command,
@@ -23,6 +23,16 @@ from .verification import (
 )
 from .settings import settings_command, settings_callback
 from .moderation import message_handler, check_new_bot
+from .broadcast import (
+    broadcast_conversation,
+    unpin_expired_messages
+)
+from .premium import (
+    premium_command,
+    premium_callback,
+    check_expired_subscriptions,
+    is_premium_user
+)
 
 __all__ = [
     # Start handlers
@@ -30,6 +40,7 @@ __all__ = [
     "help_command",
     "rules_command",
     "mystatus_command",
+    "start_callback",
     
     # Admin handlers
     "warn_command",
@@ -54,4 +65,14 @@ __all__ = [
     # Moderation handlers
     "message_handler",
     "check_new_bot",
+    
+    # Broadcast handlers
+    "broadcast_conversation",
+    "unpin_expired_messages",
+    
+    # Premium handlers
+    "premium_command",
+    "premium_callback",
+    "check_expired_subscriptions",
+    "is_premium_user",
 ]

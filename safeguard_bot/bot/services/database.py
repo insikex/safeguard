@@ -1,7 +1,8 @@
 """
 Database Service
 ================
-SQLite database service for storing group configurations, user data, and statistics.
+SQLite database service for storing group configurations, user data, statistics,
+premium subscriptions, payments, and broadcasts.
 """
 
 import sqlite3
@@ -146,10 +147,87 @@ class Database:
                 )
             """)
             
+            # Bot users table (for broadcast feature - tracks users who interacted with bot)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS bot_users (
+                    user_id INTEGER PRIMARY KEY,
+                    username TEXT,
+                    full_name TEXT,
+                    language TEXT DEFAULT 'en',
+                    is_blocked INTEGER DEFAULT 0,
+                    first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Premium subscriptions table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS premium_subscriptions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER UNIQUE,
+                    plan_type TEXT,
+                    price_paid REAL,
+                    currency TEXT DEFAULT 'USD',
+                    start_date TIMESTAMP,
+                    end_date TIMESTAMP,
+                    is_active INTEGER DEFAULT 1,
+                    is_renewal INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Payments table (CryptoBot payment history)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS payments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    invoice_id INTEGER,
+                    plan_type TEXT,
+                    amount REAL,
+                    currency TEXT,
+                    crypto_currency TEXT,
+                    status TEXT DEFAULT 'pending',
+                    paid_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Broadcasts table (broadcast history)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS broadcasts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    message_text TEXT,
+                    photo_file_id TEXT,
+                    total_users INTEGER DEFAULT 0,
+                    success_count INTEGER DEFAULT 0,
+                    failed_count INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Pinned messages table (for auto-unpin after 24 hours)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS pinned_messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    message_id INTEGER,
+                    broadcast_id INTEGER,
+                    pin_until TIMESTAMP,
+                    is_unpinned INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
             # Create indexes
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_chat ON users(chat_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_pending_expires ON pending_verifications(expires_at)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_stats_chat_date ON statistics(chat_id, stat_date)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_bot_users_blocked ON bot_users(is_blocked)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_premium_user ON premium_subscriptions(user_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_premium_active ON premium_subscriptions(is_active)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pinned_until ON pinned_messages(pin_until, is_unpinned)")
     
     # ==================== Group Methods ====================
     
@@ -440,6 +518,274 @@ class Database:
                 INSERT INTO action_logs (chat_id, admin_id, target_user_id, action_type, reason)
                 VALUES (?, ?, ?, ?, ?)
             """, (chat_id, admin_id, target_user_id, action_type, reason))
+    
+    # ==================== Bot Users Methods (for Broadcast) ====================
+    
+    def register_bot_user(
+        self,
+        user_id: int,
+        username: str = None,
+        full_name: str = None,
+        language: str = "en"
+    ):
+        """Register or update a bot user (for broadcast feature)"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO bot_users (user_id, username, full_name, language, last_seen)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(user_id) DO UPDATE SET
+                    username = COALESCE(?, username),
+                    full_name = COALESCE(?, full_name),
+                    language = COALESCE(?, language),
+                    last_seen = CURRENT_TIMESTAMP
+            """, (user_id, username, full_name, language, username, full_name, language))
+    
+    def get_bot_user(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get bot user by ID"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT * FROM bot_users WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def get_all_bot_users(self, include_blocked: bool = False) -> List[Dict[str, Any]]:
+        """Get all bot users for broadcast"""
+        with self.get_cursor() as cursor:
+            if include_blocked:
+                cursor.execute("SELECT * FROM bot_users")
+            else:
+                cursor.execute("SELECT * FROM bot_users WHERE is_blocked = 0")
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def get_bot_users_count(self, include_blocked: bool = False) -> int:
+        """Get total count of bot users"""
+        with self.get_cursor() as cursor:
+            if include_blocked:
+                cursor.execute("SELECT COUNT(*) as count FROM bot_users")
+            else:
+                cursor.execute("SELECT COUNT(*) as count FROM bot_users WHERE is_blocked = 0")
+            row = cursor.fetchone()
+            return row['count'] if row else 0
+    
+    def mark_user_blocked(self, user_id: int):
+        """Mark user as blocked (when bot can't send message)"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "UPDATE bot_users SET is_blocked = 1 WHERE user_id = ?",
+                (user_id,)
+            )
+    
+    def mark_user_unblocked(self, user_id: int):
+        """Mark user as unblocked"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "UPDATE bot_users SET is_blocked = 0 WHERE user_id = ?",
+                (user_id,)
+            )
+    
+    # ==================== Premium Subscription Methods ====================
+    
+    def create_premium_subscription(
+        self,
+        user_id: int,
+        plan_type: str,
+        price_paid: float,
+        duration_days: int,
+        currency: str = "USD",
+        is_renewal: bool = False
+    ) -> int:
+        """Create a new premium subscription"""
+        start_date = datetime.now()
+        end_date = start_date + timedelta(days=duration_days)
+        
+        with self.get_cursor() as cursor:
+            # Deactivate any existing subscription
+            cursor.execute(
+                "UPDATE premium_subscriptions SET is_active = 0 WHERE user_id = ?",
+                (user_id,)
+            )
+            
+            cursor.execute("""
+                INSERT INTO premium_subscriptions 
+                (user_id, plan_type, price_paid, currency, start_date, end_date, is_active, is_renewal)
+                VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+            """, (user_id, plan_type, price_paid, currency, start_date, end_date, 1 if is_renewal else 0))
+            
+            return cursor.lastrowid
+    
+    def get_premium_subscription(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get active premium subscription for user"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM premium_subscriptions 
+                WHERE user_id = ? AND is_active = 1 AND end_date > ?
+                ORDER BY end_date DESC LIMIT 1
+            """, (user_id, datetime.now()))
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def is_premium_user(self, user_id: int) -> bool:
+        """Check if user has active premium subscription"""
+        sub = self.get_premium_subscription(user_id)
+        return sub is not None
+    
+    def has_previous_subscription(self, user_id: int) -> bool:
+        """Check if user had any previous subscription (for renewal discount)"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT COUNT(*) as count FROM premium_subscriptions WHERE user_id = ?",
+                (user_id,)
+            )
+            row = cursor.fetchone()
+            return row['count'] > 0 if row else False
+    
+    def get_expired_subscriptions(self) -> List[Dict[str, Any]]:
+        """Get all expired but still active subscriptions"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM premium_subscriptions 
+                WHERE is_active = 1 AND end_date < ?
+            """, (datetime.now(),))
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def deactivate_subscription(self, subscription_id: int):
+        """Deactivate a subscription"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "UPDATE premium_subscriptions SET is_active = 0 WHERE id = ?",
+                (subscription_id,)
+            )
+    
+    # ==================== Payment Methods ====================
+    
+    def create_payment(
+        self,
+        user_id: int,
+        invoice_id: int,
+        plan_type: str,
+        amount: float,
+        currency: str,
+        crypto_currency: str = None
+    ) -> int:
+        """Create a new payment record"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO payments 
+                (user_id, invoice_id, plan_type, amount, currency, crypto_currency, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'pending')
+            """, (user_id, invoice_id, plan_type, amount, currency, crypto_currency))
+            return cursor.lastrowid
+    
+    def get_payment_by_invoice(self, invoice_id: int) -> Optional[Dict[str, Any]]:
+        """Get payment by invoice ID"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM payments WHERE invoice_id = ?",
+                (invoice_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def update_payment_status(self, invoice_id: int, status: str):
+        """Update payment status"""
+        with self.get_cursor() as cursor:
+            if status == 'paid':
+                cursor.execute(
+                    "UPDATE payments SET status = ?, paid_at = CURRENT_TIMESTAMP WHERE invoice_id = ?",
+                    (status, invoice_id)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE payments SET status = ? WHERE invoice_id = ?",
+                    (status, invoice_id)
+                )
+    
+    def get_user_payments(self, user_id: int) -> List[Dict[str, Any]]:
+        """Get all payments for a user"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM payments WHERE user_id = ? ORDER BY created_at DESC",
+                (user_id,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+    
+    # ==================== Broadcast Methods ====================
+    
+    def create_broadcast(
+        self,
+        message_text: str,
+        photo_file_id: str = None,
+        total_users: int = 0
+    ) -> int:
+        """Create a new broadcast record"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO broadcasts (message_text, photo_file_id, total_users)
+                VALUES (?, ?, ?)
+            """, (message_text, photo_file_id, total_users))
+            return cursor.lastrowid
+    
+    def update_broadcast_stats(
+        self,
+        broadcast_id: int,
+        success_count: int,
+        failed_count: int
+    ):
+        """Update broadcast statistics"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                UPDATE broadcasts SET success_count = ?, failed_count = ?
+                WHERE id = ?
+            """, (success_count, failed_count, broadcast_id))
+    
+    def get_broadcast(self, broadcast_id: int) -> Optional[Dict[str, Any]]:
+        """Get broadcast by ID"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT * FROM broadcasts WHERE id = ?", (broadcast_id,))
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    # ==================== Pinned Messages Methods ====================
+    
+    def create_pinned_message(
+        self,
+        user_id: int,
+        message_id: int,
+        broadcast_id: int,
+        pin_duration_hours: int = 24
+    ):
+        """Record a pinned message for auto-unpin"""
+        pin_until = datetime.now() + timedelta(hours=pin_duration_hours)
+        
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO pinned_messages (user_id, message_id, broadcast_id, pin_until)
+                VALUES (?, ?, ?, ?)
+            """, (user_id, message_id, broadcast_id, pin_until))
+    
+    def get_messages_to_unpin(self) -> List[Dict[str, Any]]:
+        """Get all messages that need to be unpinned"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM pinned_messages 
+                WHERE is_unpinned = 0 AND pin_until < ?
+            """, (datetime.now(),))
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def mark_message_unpinned(self, pinned_id: int):
+        """Mark a message as unpinned"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "UPDATE pinned_messages SET is_unpinned = 1 WHERE id = ?",
+                (pinned_id,)
+            )
 
 
 # Global database instance
