@@ -119,7 +119,7 @@
     },
     "broadcast": {
         "not_owner": "This command is only available for the bot owner.",
-        "start": "**Broadcast Message**\n\nSend me the message you want to broadcast to all users.\n\nYou can send:\n- Text message\n- Photo with caption\n\nTotal active users: **{count}**\n\nThe message will be automatically pinned in each user's chat for 24 hours.",
+        "start": "**Broadcast Message**\n\nSend me the message you want to broadcast to all users.\n\nYou can send:\n- Text message\n- Photo with caption\n\nTotal active users: **{count}**",
         "cancel_btn": "Cancel",
         "confirm_btn": "Send Broadcast",
         "invalid_content": "Please send a text message or photo with caption.",

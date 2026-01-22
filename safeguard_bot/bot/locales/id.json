@@ -119,7 +119,7 @@
     },
     "broadcast": {
         "not_owner": "Perintah ini hanya tersedia untuk pemilik bot.",
-        "start": "**Broadcast Pesan**\n\nKirimkan pesan yang ingin Anda broadcast ke semua pengguna.\n\nAnda dapat mengirim:\n- Pesan teks\n- Foto dengan caption\n\nTotal pengguna aktif: **{count}**\n\nPesan akan otomatis di-pin di chat setiap pengguna selama 24 jam.",
+        "start": "**Broadcast Pesan**\n\nKirimkan pesan yang ingin Anda broadcast ke semua pengguna.\n\nAnda dapat mengirim:\n- Pesan teks\n- Foto dengan caption\n\nTotal pengguna aktif: **{count}**",
         "cancel_btn": "Batal",
         "confirm_btn": "Kirim Broadcast",
         "invalid_content": "Silakan kirim pesan teks atau foto dengan caption.",
