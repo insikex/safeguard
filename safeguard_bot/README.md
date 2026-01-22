@@ -75,12 +75,28 @@ cd ~/bots
 
 # Clone repository (ganti dengan URL repository Anda)
 git clone https://github.com/USERNAME/safeguard-bot.git
-cd safeguard-bot
+
+# PENTING: Masuk ke folder project utama (safeguard_bot)
+cd safeguard-bot/safeguard_bot
 ```
+
+> ⚠️ **PERHATIAN**: Setelah clone, pastikan Anda masuk ke folder `safeguard_bot` di dalam folder hasil clone. Struktur foldernya adalah:
+> ```
+> safeguard-bot/           <- folder hasil clone
+> └── safeguard_bot/       <- folder utama project (masuk ke sini!)
+>     ├── requirements.txt
+>     ├── run.py
+>     ├── .env.example
+>     └── bot/
+> ```
 
 ### Langkah 4: Setup Virtual Environment
 
 ```bash
+# Pastikan Anda sudah di folder safeguard_bot (cek dengan pwd)
+pwd
+# Output harus: /home/username/bots/safeguard-bot/safeguard_bot
+
 # Buat virtual environment
 python3 -m venv venv
 
@@ -90,6 +106,8 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 ```
+
+> 💡 **Tips**: Jika muncul error "No such file or directory: 'requirements.txt'", pastikan Anda sudah berada di folder yang benar. Jalankan `ls` untuk melihat apakah file `requirements.txt` ada di folder saat ini.
 
 ### Langkah 5: Konfigurasi Bot
 
@@ -153,15 +171,17 @@ After=network.target
 [Service]
 Type=simple
 User=USERNAME
-WorkingDirectory=/home/USERNAME/bots/safeguard-bot
-Environment=PATH=/home/USERNAME/bots/safeguard-bot/venv/bin
-ExecStart=/home/USERNAME/bots/safeguard-bot/venv/bin/python run.py
+WorkingDirectory=/home/USERNAME/bots/safeguard-bot/safeguard_bot
+Environment=PATH=/home/USERNAME/bots/safeguard-bot/safeguard_bot/venv/bin
+ExecStart=/home/USERNAME/bots/safeguard-bot/safeguard_bot/venv/bin/python run.py
 Restart=always
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+> ⚠️ **PERHATIAN**: Perhatikan bahwa `WorkingDirectory` dan path lainnya menunjuk ke folder `safeguard_bot` di dalam folder hasil clone.
 
 Aktifkan dan jalankan service:
 
@@ -178,6 +198,34 @@ sudo systemctl start safeguard-bot
 # Cek status
 sudo systemctl status safeguard-bot
 ```
+
+---
+
+## 🚀 Instalasi Otomatis (Alternatif)
+
+Jika Anda ingin cara yang lebih mudah, gunakan script instalasi otomatis:
+
+```bash
+# Clone repository
+cd ~/bots
+git clone https://github.com/USERNAME/safeguard-bot.git
+
+# Masuk ke folder project
+cd safeguard-bot/safeguard_bot
+
+# Jalankan script instalasi otomatis
+chmod +x scripts/install.sh
+./scripts/install.sh
+```
+
+Script ini akan otomatis:
+- Install dependencies sistem
+- Membuat virtual environment
+- Install Python packages
+- Membuat file .env dari template
+- Setup systemd service
+
+Setelah script selesai, tinggal edit file `.env` dan tambahkan BOT_TOKEN Anda.
 
 ### Perintah Berguna untuk Mengelola Bot
 
@@ -248,9 +296,16 @@ git push -u origin master
 # Di VPS
 cd ~/bots
 git clone https://github.com/USERNAME/safeguard-bot.git
-cd safeguard-bot
 
-# Setup seperti langkah instalasi di atas
+# PENTING: Masuk ke folder safeguard_bot
+cd safeguard-bot/safeguard_bot
+
+# Lanjutkan dengan langkah instalasi (buat venv, install requirements, dll)
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+nano .env  # Edit dan tambahkan BOT_TOKEN
 ```
 
 ---
@@ -332,6 +387,21 @@ safeguard_bot/
 ---
 
 ## 🐛 Troubleshooting
+
+### Error: "No such file or directory: 'requirements.txt'"
+Ini terjadi karena Anda berada di folder yang salah. Solusi:
+```bash
+# Cek posisi Anda sekarang
+pwd
+ls
+
+# Jika tidak ada requirements.txt, masuk ke folder yang benar
+cd safeguard_bot
+ls  # Sekarang harus terlihat requirements.txt
+
+# Lanjutkan install
+pip install -r requirements.txt
+```
 
 ### Bot tidak merespons
 1. Pastikan BOT_TOKEN benar
