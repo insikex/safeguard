@@ -10,10 +10,12 @@ from datetime import timedelta
 from telegram import Update
 from telegram.ext import (
     Application,
+    ApplicationBuilder,
     CommandHandler,
     MessageHandler,
     CallbackQueryHandler,
-    filters
+    filters,
+    ContextTypes
 )
 
 from bot.config import config
@@ -69,14 +71,34 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+async def post_init(application: Application) -> None:
+    """Post initialization callback - schedule jobs after app is fully initialized"""
+    job_queue = application.job_queue
+    
+    if job_queue:
+        # Job to check expired subscriptions (every 6 hours)
+        job_queue.run_repeating(
+            check_expired_subscriptions,
+            interval=timedelta(hours=6),
+            first=timedelta(minutes=10),
+            name="check_expired_subscriptions"
+        )
+        logger.info("Scheduled jobs: check_expired_subscriptions")
+
+
 def create_application() -> Application:
     """Create and configure the bot application"""
     
     # Validate config
     config.validate()
     
-    # Create application
-    application = Application.builder().token(config.token).build()
+    # Create application with post_init callback to avoid weak reference issues
+    application = (
+        ApplicationBuilder()
+        .token(config.token)
+        .post_init(post_init)
+        .build()
+    )
     
     # Add command handlers
     application.add_handler(CommandHandler("start", start_command))
@@ -119,16 +141,11 @@ def create_application() -> Application:
         pattern=r"^start_"
     ))
     
-    # New member handler
+    # New member handler (combines verification and bot checking)
+    # Using a single handler to avoid duplicate processing
     application.add_handler(MessageHandler(
         filters.StatusUpdate.NEW_CHAT_MEMBERS,
-        new_member_handler
-    ))
-    
-    # Bot added to group (check for suspicious bots)
-    application.add_handler(MessageHandler(
-        filters.StatusUpdate.NEW_CHAT_MEMBERS,
-        check_new_bot
+        combined_new_member_handler
     ))
     
     # Message handler for moderation (must be last)
@@ -140,23 +157,19 @@ def create_application() -> Application:
     # Error handler
     application.add_error_handler(error_handler)
     
-    # Schedule jobs
-    job_queue = application.job_queue
-    
-    # Job to check expired subscriptions (every 6 hours)
-    job_queue.run_repeating(
-        check_expired_subscriptions,
-        interval=timedelta(hours=6),
-        first=timedelta(minutes=10),
-        name="check_expired_subscriptions"
-    )
-    
-    logger.info("Scheduled jobs: check_expired_subscriptions")
-    
     return application
 
 
-async def error_handler(update: Update, context):
+async def combined_new_member_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Combined handler for new members - handles both verification and bot checking"""
+    # First, handle verification for human users
+    await new_member_handler(update, context)
+    
+    # Then check for suspicious bots
+    await check_new_bot(update, context)
+
+
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle errors"""
     logger.error(f"Exception while handling an update: {context.error}")
     
