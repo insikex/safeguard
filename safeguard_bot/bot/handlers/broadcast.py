@@ -268,7 +268,7 @@ def create_broadcast_conversation() -> ConversationHandler:
         entry_points=[CommandHandler("broadcast", broadcast_command)],
         states={
             WAITING_BROADCAST_CONTENT: [
-                MessageHandler(filters.PHOTO | filters.TEXT & ~filters.COMMAND, receive_broadcast_content)
+                MessageHandler(filters.PHOTO | (filters.TEXT & ~filters.COMMAND), receive_broadcast_content)
             ],
             CONFIRM_BROADCAST: [
                 CallbackQueryHandler(confirm_broadcast, pattern=r"^broadcast_")
@@ -279,5 +279,6 @@ def create_broadcast_conversation() -> ConversationHandler:
             CallbackQueryHandler(cancel_broadcast, pattern=r"^broadcast_cancel$")
         ],
         per_user=True,
+        per_chat=True,
         per_message=False
     )
