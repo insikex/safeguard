@@ -1,0 +1,120 @@
+{
+    "welcome": {
+        "start_private": "👮‍♂️ **Safeguard Bot - Telegram Group Protector**\n\nHello {name}! I am a group protection bot that helps keep your group safe from spam, bots, and malicious users.\n\n**🛡️ Main Features:**\n🔹 New member verification (CAPTCHA)\n🔹 Anti-flood (message spam)\n🔹 Anti-link (block links)\n🔹 Auto anti-spam\n🔹 Warning system\n🔹 Custom welcome message\n🔹 Auto-kick spam/bots\n🔹 Group statistics\n\n**📋 Admin Commands:**\n/settings - Bot settings\n/warn - Give warning\n/unwarn - Remove warning\n/kick - Kick user\n/ban - Ban user\n/mute - Mute user\n/unmute - Unmute user\n/stats - Group statistics\n\n**📖 General Commands:**\n/help - Full help\n/rules - Group rules\n/mystatus - Your status\n\n➕ **Add me to your group and make me admin to start protecting your group!**",
+        "start_group": "✅ Bot is active in this group!\n\nUse /help to see available commands.\nUse /settings to configure the bot (admin only).",
+        "new_member": "👋 Welcome {name} to **{group}**!\n\nPlease read the group rules and enjoy the discussions.",
+        "new_member_verify": "👋 Hello {name}!\n\nWelcome to **{group}**!\n\n🔐 To access this group, please verify that you are not a bot by completing the challenge below.\n\n⏱️ You have {timeout} seconds."
+    },
+    "verification": {
+        "button_prompt": "Click the button below to verify:",
+        "button_text": "✅ I'm Not a Bot",
+        "math_prompt": "What is **{num1} {operator} {num2}**?",
+        "emoji_prompt": "Select the matching emoji: {emoji}",
+        "portal_prompt": "Click the button below to verify via portal:",
+        "portal_button": "🌐 Verify via Portal",
+        "success": "✅ **Verification Successful!**\n\nWelcome to the group, {name}! You can now send messages.",
+        "failed": "❌ **Verification Failed!**\n\nWrong answer. Remaining attempts: {attempts}",
+        "timeout": "⏱️ **Time's Up!**\n\n{name} was removed for not completing verification in time.",
+        "kicked": "❌ User {name} was removed for failing verification.",
+        "wrong_user": "⚠️ This button is not for you!",
+        "already_verified": "✅ You are already verified!",
+        "max_attempts": "❌ **No More Attempts!**\n\n{name} was removed for failing verification {max} times."
+    },
+    "admin": {
+        "not_admin": "⚠️ This command is for admins only!",
+        "not_creator": "⚠️ This command is for the group owner only!",
+        "need_reply": "⚠️ Reply to a user's message to process!",
+        "cannot_admin": "⚠️ Cannot process other admins!",
+        "cannot_self": "⚠️ Cannot process yourself!",
+        "warn_success": "⚠️ **Warning [{current}/{max}]**\n\nUser: {user}\nReason: {reason}\n\n{remaining} more warnings before kick.",
+        "warn_kicked": "🚫 **User Kicked!**\n\nUser: {user}\nReason: Reached warning limit ({max}x)",
+        "unwarn_success": "✅ **Warning Removed**\n\nUser: {user}\nRemaining warnings: {remaining}/{max}",
+        "unwarn_none": "ℹ️ User {user} has no warnings.",
+        "kick_success": "🚫 **User Kicked!**\n\nUser: {user}\nBy: {admin}\nReason: {reason}",
+        "ban_success": "🔨 **User Banned!**\n\nUser: {user}\nBy: {admin}\nReason: {reason}",
+        "unban_success": "✅ **User Unbanned!**\n\nUser: {user}\nBy: {admin}",
+        "mute_success": "🔇 **User Muted!**\n\nUser: {user}\nBy: {admin}\nDuration: {duration}\nReason: {reason}",
+        "unmute_success": "🔊 **User Unmuted!**\n\nUser: {user}\nBy: {admin}",
+        "user_not_found": "⚠️ User not found!",
+        "action_failed": "❌ Failed to perform action: {error}"
+    },
+    "settings": {
+        "title": "⚙️ **Group Settings**\n\nClick buttons to enable/disable features:",
+        "welcome_toggle": "💬 Welcome Message",
+        "verify_toggle": "🔐 Member Verification",
+        "antiflood_toggle": "🌊 Anti-Flood",
+        "antilink_toggle": "🔗 Anti-Link",
+        "antispam_toggle": "🚫 Anti-Spam",
+        "antibadword_toggle": "🤬 Anti-Bad Words",
+        "verify_type": "📋 Verification Type: {type}",
+        "warn_limit": "⚠️ Warning Limit: {limit}",
+        "language": "🌐 Language: {lang}",
+        "close_btn": "❌ Close",
+        "back_btn": "◀️ Back",
+        "updated": "✅ Settings updated!",
+        "verify_types": {
+            "button": "Button",
+            "math": "Math",
+            "emoji": "Emoji",
+            "portal": "Web Portal"
+        },
+        "select_verify_type": "📋 **Select Verification Type:**",
+        "select_language": "🌐 **Select Bot Language:**",
+        "select_warn_limit": "⚠️ **Select Warning Limit:**"
+    },
+    "protection": {
+        "flood_detected": "🌊 **Flood Detected!**\n\n{user} has been muted for {duration} seconds for sending messages too fast.",
+        "link_deleted": "🔗 **Link Deleted!**\n\n{user}, links are not allowed in this group!",
+        "spam_detected": "🚫 **Spam Detected!**\n\nMessage from {user} has been deleted.",
+        "badword_detected": "🤬 **Bad Word Detected!**\n\n{user}, please watch your language!",
+        "bot_detected": "🤖 **Bot Detected!**\n\nUser {user} was detected as a bot and removed."
+    },
+    "stats": {
+        "title": "📊 **Group Statistics**\n\n",
+        "total_members": "👥 Total Members: {count}",
+        "verified_today": "✅ Verified Today: {count}",
+        "kicked_today": "🚫 Kicked Today: {count}",
+        "warnings_today": "⚠️ Warnings Today: {count}",
+        "messages_today": "💬 Messages Today: {count}",
+        "spam_blocked": "🚫 Spam Blocked: {count}",
+        "links_blocked": "🔗 Links Blocked: {count}"
+    },
+    "help": {
+        "title": "📖 **Safeguard Bot Help**\n\n",
+        "admin_commands": "**👮 Admin Commands:**\n/settings - Settings menu\n/warn [reason] - Give warning (reply)\n/unwarn - Remove warning (reply)\n/kick [reason] - Kick user (reply)\n/ban [reason] - Ban user (reply)\n/unban - Unban user (reply)\n/mute [duration] - Mute user (reply)\n/unmute - Unmute user (reply)\n/stats - Group statistics",
+        "user_commands": "**📋 General Commands:**\n/help - This help\n/rules - Group rules\n/mystatus - Your status in group",
+        "footer": "\n\n💡 **Tip:** Reply to a user's message to use admin commands."
+    },
+    "rules": {
+        "not_set": "📜 Group rules have not been set by the admin.",
+        "title": "📜 **Group Rules**\n\n{rules}"
+    },
+    "status": {
+        "title": "📋 **Your Status**\n\n",
+        "user": "👤 Name: {name}\n",
+        "id": "🆔 ID: `{id}`\n",
+        "warnings": "⚠️ Warnings: {count}/{max}\n",
+        "verified": "✅ Status: Verified\n",
+        "muted": "🔇 Status: Muted\n",
+        "role": "👑 Role: {role}"
+    },
+    "errors": {
+        "generic": "❌ An error occurred. Please try again.",
+        "no_permission": "❌ Bot doesn't have enough permissions!",
+        "private_only": "⚠️ This command can only be used in private chat.",
+        "group_only": "⚠️ This command can only be used in groups."
+    },
+    "buttons": {
+        "verify": "✅ Verify",
+        "cancel": "❌ Cancel",
+        "confirm": "✅ Confirm",
+        "back": "◀️ Back"
+    },
+    "time": {
+        "seconds": "seconds",
+        "minutes": "minutes",
+        "hours": "hours",
+        "days": "days",
+        "forever": "forever"
+    }
+}
