@@ -6,6 +6,7 @@ Main entry point for the Telegram Safeguard Bot.
 
 import logging
 import sys
+from datetime import timedelta
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -22,6 +23,7 @@ from bot.handlers import (
     help_command,
     rules_command,
     mystatus_command,
+    start_callback,
     
     # Admin handlers
     warn_command,
@@ -43,7 +45,16 @@ from bot.handlers import (
     
     # Moderation handlers
     message_handler,
-    check_new_bot
+    check_new_bot,
+    
+    # Broadcast handlers
+    broadcast_conversation,
+    unpin_expired_messages,
+    
+    # Premium handlers
+    premium_command,
+    premium_callback,
+    check_expired_subscriptions
 )
 
 
@@ -85,6 +96,12 @@ def create_application() -> Application:
     application.add_handler(CommandHandler("unmute", unmute_command))
     application.add_handler(CommandHandler("stats", stats_command))
     
+    # Premium command
+    application.add_handler(CommandHandler("premium", premium_command))
+    
+    # Broadcast conversation handler (must be before other handlers)
+    application.add_handler(broadcast_conversation)
+    
     # Callback query handlers
     application.add_handler(CallbackQueryHandler(
         verification_callback,
@@ -93,6 +110,14 @@ def create_application() -> Application:
     application.add_handler(CallbackQueryHandler(
         settings_callback,
         pattern=r"^settings_"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        premium_callback,
+        pattern=r"^premium_"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        start_callback,
+        pattern=r"^start_"
     ))
     
     # New member handler
@@ -115,6 +140,27 @@ def create_application() -> Application:
     
     # Error handler
     application.add_error_handler(error_handler)
+    
+    # Schedule jobs
+    job_queue = application.job_queue
+    
+    # Job to unpin expired broadcast messages (every hour)
+    job_queue.run_repeating(
+        unpin_expired_messages,
+        interval=timedelta(hours=1),
+        first=timedelta(minutes=5),
+        name="unpin_expired_messages"
+    )
+    
+    # Job to check expired subscriptions (every 6 hours)
+    job_queue.run_repeating(
+        check_expired_subscriptions,
+        interval=timedelta(hours=6),
+        first=timedelta(minutes=10),
+        name="check_expired_subscriptions"
+    )
+    
+    logger.info("Scheduled jobs: unpin_expired_messages, check_expired_subscriptions")
     
     return application
 

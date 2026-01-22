@@ -4,7 +4,7 @@ Start & Help Handlers
 Handlers for /start and /help commands.
 """
 
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 
@@ -16,15 +16,43 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command"""
     user = update.effective_user
     chat = update.effective_chat
+    lang = detect_lang(user)
     
     if chat.type == "private":
-        # Private chat - show full welcome message
+        # Register user for broadcast feature
+        db.register_bot_user(
+            user_id=user.id,
+            username=user.username,
+            full_name=user.full_name,
+            language=lang
+        )
+        
+        # Private chat - show full welcome message with Premium button
         text = get_text(
             "welcome.start_private",
             user,
             name=get_user_display_name(user)
         )
-        await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+        
+        # Add inline buttons
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "Premium",
+                    callback_data="premium_plans"
+                ),
+                InlineKeyboardButton(
+                    "Help",
+                    callback_data="start_help"
+                )
+            ]
+        ]
+        
+        await update.message.reply_text(
+            text, 
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
     else:
         # Group chat
         # Ensure group exists in database
@@ -47,6 +75,63 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     
     await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+
+
+async def start_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle start-related callback queries"""
+    query = update.callback_query
+    await query.answer()
+    
+    user = update.effective_user
+    
+    if query.data == "start_help":
+        text = (
+            get_text("help.title", user) +
+            get_text("help.admin_commands", user) +
+            "\n\n" +
+            get_text("help.user_commands", user) +
+            get_text("help.footer", user)
+        )
+        
+        keyboard = [[
+            InlineKeyboardButton(
+                "Back",
+                callback_data="start_back"
+            )
+        ]]
+        
+        await query.edit_message_text(
+            text, 
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    
+    elif query.data == "start_back":
+        lang = detect_lang(user)
+        text = get_text(
+            "welcome.start_private",
+            user,
+            name=get_user_display_name(user)
+        )
+        
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "Premium",
+                    callback_data="premium_plans"
+                ),
+                InlineKeyboardButton(
+                    "Help",
+                    callback_data="start_help"
+                )
+            ]
+        ]
+        
+        await query.edit_message_text(
+            text, 
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
 
 async def rules_command(update: Update, context: ContextTypes.DEFAULT_TYPE):

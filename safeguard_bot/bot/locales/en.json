@@ -116,5 +116,40 @@
         "hours": "hours",
         "days": "days",
         "forever": "forever"
+    },
+    "broadcast": {
+        "not_owner": "This command is only available for the bot owner.",
+        "start": "**Broadcast Message**\n\nSend me the message you want to broadcast to all users.\n\nYou can send:\n- Text message\n- Photo with caption\n\nTotal active users: **{count}**\n\nThe message will be automatically pinned in each user's chat for 24 hours.",
+        "cancel_btn": "Cancel",
+        "confirm_btn": "Send Broadcast",
+        "invalid_content": "Please send a text message or photo with caption.",
+        "preview": "**Preview Broadcast**\n\nThis message will be sent to **{count}** users:",
+        "cancelled": "Broadcast cancelled.",
+        "error": "An error occurred. Please try again.",
+        "sending": "Sending broadcast... Please wait.",
+        "complete": "**Broadcast Complete!**\n\nTotal: {total} users\nSuccess: {success}\nFailed: {failed}"
+    },
+    "premium": {
+        "intro": "**Premium Subscription**\n\nUnlock exclusive features with Premium!\n\n**Premium Features:**\n{features}\n\nClick the button below to view available plans.",
+        "active_status": "**Premium Active**\n\nYour Plan: **{plan}**\nExpires: **{end_date}**\nDays Remaining: **{days_left}** days\n\nThank you for supporting us!",
+        "select_plan": "**Select Premium Plan**\n\nChoose your preferred subscription plan:\n\nAll plans include full access to premium features.",
+        "view_plans_btn": "View Plans",
+        "extend_btn": "Extend Subscription",
+        "close_btn": "Close",
+        "back_btn": "Back",
+        "invalid_plan": "Invalid plan selected.",
+        "payment_not_configured": "Payment system is not configured. Please contact support.",
+        "creating_invoice": "Creating payment invoice...",
+        "invoice_error": "Failed to create payment invoice. Please try again later.",
+        "payment_info": "**Payment Details**\n\nPlan: **{plan}**\nPrice: **${price} USDT**\nDuration: **{duration} days**\n\nClick 'Pay Now' to proceed with payment via CryptoBot.\n\nAfter payment, click 'Check Payment' to activate your premium.",
+        "pay_btn": "Pay Now",
+        "check_payment_btn": "Check Payment",
+        "cancel_btn": "Cancel",
+        "invalid_data": "Invalid payment data.",
+        "payment_success": "**Payment Successful!**\n\nYour Premium subscription is now active.\n\nPlan: **{plan}**\nDuration: **{duration} days**\n\nThank you for your purchase! Enjoy all premium features.",
+        "processing_error": "Error processing payment. Please try again.",
+        "payment_pending": "Payment not yet received. Please complete the payment first.",
+        "payment_expired": "Payment invoice has expired. Please create a new payment.",
+        "check_error": "Error checking payment status. Please try again."
     }
 }

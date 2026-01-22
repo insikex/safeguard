@@ -6,7 +6,7 @@ Configuration management for the Telegram Safeguard Bot.
 
 import os
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, List
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -20,6 +20,9 @@ class BotConfig:
     # Telegram Bot Token
     token: str = field(default_factory=lambda: os.getenv("BOT_TOKEN", ""))
     
+    # Bot Owner ID (for broadcast and owner-only features)
+    owner_id: int = field(default_factory=lambda: int(os.getenv("OWNER_ID", "0")))
+    
     # Bot Admin IDs (comma separated in env)
     admin_ids: list = field(default_factory=lambda: [
         int(x.strip()) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip()
@@ -27,6 +30,15 @@ class BotConfig:
     
     # Database settings
     database_url: str = field(default_factory=lambda: os.getenv("DATABASE_URL", "sqlite:///safeguard.db"))
+    
+    # CryptoBot Payment Settings
+    cryptobot_token: str = field(default_factory=lambda: os.getenv("CRYPTOBOT_TOKEN", ""))
+    cryptobot_testnet: bool = field(default_factory=lambda: os.getenv("CRYPTOBOT_TESTNET", "false").lower() == "true")
+    
+    # Premium Pricing (in USD)
+    premium_price_1_month: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_1_MONTH", "10")))
+    premium_price_3_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_3_MONTHS", "18")))
+    premium_price_6_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_6_MONTHS", "50")))
     
     # Verification settings
     verification_timeout: int = field(default_factory=lambda: int(os.getenv("VERIFICATION_TIMEOUT", "120")))
@@ -52,6 +64,10 @@ class BotConfig:
         if not self.token:
             raise ValueError("BOT_TOKEN is required!")
         return True
+    
+    def is_owner(self, user_id: int) -> bool:
+        """Check if user is the bot owner"""
+        return user_id == self.owner_id
 
 
 @dataclass
