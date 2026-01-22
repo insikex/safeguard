@@ -279,5 +279,6 @@ def create_broadcast_conversation() -> ConversationHandler:
             CallbackQueryHandler(cancel_broadcast, pattern=r"^broadcast_cancel$")
         ],
         per_user=True,
+        per_chat=True,
         per_message=False
     )
