@@ -5,6 +5,9 @@
 # Telegram Bot API
 python-telegram-bot[job-queue]==21.0.1
 
+# APScheduler (pinned version for compatibility with python-telegram-bot)
+APScheduler>=3.10.4,<4.0.0
+
 # Environment Variables
 python-dotenv==1.0.0
 
