@@ -11,7 +11,8 @@ from .decorators import (
     private_only,
     ensure_group_config,
     rate_limit,
-    log_action
+    log_action,
+    bot_owner_required
 )
 
 from .helpers import (
@@ -42,6 +43,7 @@ __all__ = [
     "ensure_group_config",
     "rate_limit",
     "log_action",
+    "bot_owner_required",
     
     # Helpers
     "get_user_mention",

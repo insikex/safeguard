@@ -8,6 +8,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 
+from bot.config import config
 from bot.services import get_text, db, detect_lang
 from bot.utils import get_user_display_name
 
@@ -41,7 +42,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         get_text("help.title", user) +
         get_text("help.admin_commands", user) +
-        "\n\n" +
+        "\n\n"
+    )
+    
+    # Show owner commands only to bot owners
+    if user.id in config.admin_ids:
+        text += get_text("help.owner_commands", user) + "\n\n"
+    
+    text += (
         get_text("help.user_commands", user) +
         get_text("help.footer", user)
     )

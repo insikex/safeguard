@@ -12,6 +12,7 @@ from telegram.ext import ContextTypes
 from telegram.constants import ChatMemberStatus
 
 from bot.services import get_text, db
+from bot.config import config
 
 
 def admin_required(func: Callable):
@@ -168,3 +169,20 @@ def log_action(action_type: str):
         return wrapper
     
     return decorator
+
+
+def bot_owner_required(func: Callable):
+    """Decorator to check if user is a bot owner (from ADMIN_IDS in config)"""
+    @wraps(func)
+    async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        user_id = update.effective_user.id
+        
+        if user_id not in config.admin_ids:
+            await update.message.reply_text(
+                get_text("broadcast.not_owner", update.effective_user)
+            )
+            return
+        
+        return await func(update, context, *args, **kwargs)
+    
+    return wrapper

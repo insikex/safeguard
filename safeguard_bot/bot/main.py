@@ -32,6 +32,8 @@ from bot.handlers import (
     mute_command,
     unmute_command,
     stats_command,
+    broadcast_command,
+    unpin_expired_broadcasts,
     
     # Verification handlers
     new_member_handler,
@@ -84,6 +86,15 @@ def create_application() -> Application:
     application.add_handler(CommandHandler("mute", mute_command))
     application.add_handler(CommandHandler("unmute", unmute_command))
     application.add_handler(CommandHandler("stats", stats_command))
+    application.add_handler(CommandHandler("broadcast", broadcast_command))
+    
+    # Schedule job to unpin expired broadcasts (runs every 5 minutes)
+    application.job_queue.run_repeating(
+        unpin_expired_broadcasts,
+        interval=300,  # 5 minutes
+        first=60,  # Start after 1 minute
+        name="unpin_expired_broadcasts"
+    )
     
     # Callback query handlers
     application.add_handler(CallbackQueryHandler(
