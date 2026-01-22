@@ -2,12 +2,11 @@
 Broadcast Handler
 =================
 Handler for owner-only broadcast feature.
-Broadcasts messages and photos to all bot users with auto-pin for 24 hours.
+Broadcasts messages and photos to all bot users.
 """
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from telegram.constants import ParseMode
@@ -198,27 +197,6 @@ async def confirm_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         parse_mode=ParseMode.MARKDOWN
                     )
                 
-                # Try to pin the message for 24 hours
-                try:
-                    await context.bot.pin_chat_message(
-                        chat_id=bot_user['user_id'],
-                        message_id=sent_message.message_id,
-                        disable_notification=True
-                    )
-                    
-                    # Record pinned message for auto-unpin
-                    db.create_pinned_message(
-                        user_id=bot_user['user_id'],
-                        message_id=sent_message.message_id,
-                        broadcast_id=broadcast_id,
-                        pin_duration_hours=24
-                    )
-                    
-                    logger.info(f"Pinned broadcast message for user {bot_user['user_id']}")
-                except Exception as pin_error:
-                    # Pin might fail but message was sent
-                    logger.warning(f"Could not pin message for user {bot_user['user_id']}: {pin_error}")
-                
                 success_count += 1
                 
                 # Small delay to avoid rate limiting
@@ -276,29 +254,6 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     
     return ConversationHandler.END
-
-
-async def unpin_expired_messages(context: ContextTypes.DEFAULT_TYPE):
-    """Job to unpin expired broadcast messages (runs every hour)"""
-    logger.info("Checking for expired pinned messages...")
-    
-    messages_to_unpin = db.get_messages_to_unpin()
-    
-    for pinned in messages_to_unpin:
-        try:
-            await context.bot.unpin_chat_message(
-                chat_id=pinned['user_id'],
-                message_id=pinned['message_id']
-            )
-            db.mark_message_unpinned(pinned['id'])
-            logger.info(f"Unpinned message {pinned['message_id']} for user {pinned['user_id']}")
-        except Exception as e:
-            # Mark as unpinned anyway to avoid retrying
-            db.mark_message_unpinned(pinned['id'])
-            logger.warning(f"Could not unpin message {pinned['message_id']}: {e}")
-    
-    if messages_to_unpin:
-        logger.info(f"Processed {len(messages_to_unpin)} expired pinned messages")
 
 
 # Broadcast conversation handler factory function

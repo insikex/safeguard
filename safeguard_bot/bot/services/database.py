@@ -205,18 +205,6 @@ class Database:
                 )
             """)
             
-            # Pinned messages table (for auto-unpin after 24 hours)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS pinned_messages (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER,
-                    message_id INTEGER,
-                    broadcast_id INTEGER,
-                    pin_until TIMESTAMP,
-                    is_unpinned INTEGER DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
             
             # Create indexes
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_chat ON users(chat_id)")
@@ -227,7 +215,6 @@ class Database:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_premium_active ON premium_subscriptions(is_active)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pinned_until ON pinned_messages(pin_until, is_unpinned)")
     
     # ==================== Group Methods ====================
     
@@ -752,40 +739,6 @@ class Database:
                 return dict(row)
         return None
     
-    # ==================== Pinned Messages Methods ====================
-    
-    def create_pinned_message(
-        self,
-        user_id: int,
-        message_id: int,
-        broadcast_id: int,
-        pin_duration_hours: int = 24
-    ):
-        """Record a pinned message for auto-unpin"""
-        pin_until = datetime.now() + timedelta(hours=pin_duration_hours)
-        
-        with self.get_cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO pinned_messages (user_id, message_id, broadcast_id, pin_until)
-                VALUES (?, ?, ?, ?)
-            """, (user_id, message_id, broadcast_id, pin_until))
-    
-    def get_messages_to_unpin(self) -> List[Dict[str, Any]]:
-        """Get all messages that need to be unpinned"""
-        with self.get_cursor() as cursor:
-            cursor.execute("""
-                SELECT * FROM pinned_messages 
-                WHERE is_unpinned = 0 AND pin_until < ?
-            """, (datetime.now(),))
-            return [dict(row) for row in cursor.fetchall()]
-    
-    def mark_message_unpinned(self, pinned_id: int):
-        """Mark a message as unpinned"""
-        with self.get_cursor() as cursor:
-            cursor.execute(
-                "UPDATE pinned_messages SET is_unpinned = 1 WHERE id = ?",
-                (pinned_id,)
-            )
 
 
 # Global database instance

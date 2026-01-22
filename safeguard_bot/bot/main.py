@@ -49,7 +49,6 @@ from bot.handlers import (
     
     # Broadcast handlers
     create_broadcast_conversation,
-    unpin_expired_messages,
     
     # Premium handlers
     premium_command,
@@ -144,14 +143,6 @@ def create_application() -> Application:
     # Schedule jobs
     job_queue = application.job_queue
     
-    # Job to unpin expired broadcast messages (every hour)
-    job_queue.run_repeating(
-        unpin_expired_messages,
-        interval=timedelta(hours=1),
-        first=timedelta(minutes=5),
-        name="unpin_expired_messages"
-    )
-    
     # Job to check expired subscriptions (every 6 hours)
     job_queue.run_repeating(
         check_expired_subscriptions,
@@ -160,7 +151,7 @@ def create_application() -> Application:
         name="check_expired_subscriptions"
     )
     
-    logger.info("Scheduled jobs: unpin_expired_messages, check_expired_subscriptions")
+    logger.info("Scheduled jobs: check_expired_subscriptions")
     
     return application
 
