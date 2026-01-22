@@ -82,6 +82,7 @@
     "help": {
         "title": "📖 **Bantuan Safeguard Bot**\n\n",
         "admin_commands": "**👮 Perintah Admin:**\n/settings - Menu pengaturan\n/warn [alasan] - Beri peringatan (reply)\n/unwarn - Hapus peringatan (reply)\n/kick [alasan] - Kick user (reply)\n/ban [alasan] - Ban user (reply)\n/unban - Unban user (reply)\n/mute [durasi] - Mute user (reply)\n/unmute - Unmute user (reply)\n/stats - Statistik grup",
+        "owner_commands": "**👑 Perintah Pemilik Bot:**\n/broadcast [pesan] - Broadcast ke semua grup (auto-pin 24 jam)",
         "user_commands": "**📋 Perintah Umum:**\n/help - Bantuan ini\n/rules - Aturan grup\n/mystatus - Status Anda di grup",
         "footer": "\n\n💡 **Tips:** Reply ke pesan user untuk menggunakan perintah admin."
     },
@@ -116,5 +117,16 @@
         "hours": "jam",
         "days": "hari",
         "forever": "selamanya"
+    },
+    "broadcast": {
+        "not_owner": "⚠️ Perintah ini hanya untuk pemilik bot!",
+        "usage": "📢 **Cara Menggunakan Broadcast:**\n\n1️⃣ **Broadcast Teks:**\n`/broadcast [pesan Anda]`\n\n2️⃣ **Broadcast Foto dengan Caption:**\nReply foto dengan `/broadcast`\n\n⏰ Pesan akan otomatis di-pin selama 24 jam di setiap grup.",
+        "no_groups": "⚠️ Tidak ada grup yang terdaftar di database.",
+        "sending": "📤 **Mengirim broadcast ke {total} grup...**\n\nMohon tunggu...",
+        "progress": "📤 Mengirim... {current}/{total} grup",
+        "completed": "✅ **Broadcast Selesai!**\n\n📊 **Statistik:**\n✅ Berhasil: {success} grup\n❌ Gagal: {failed} grup\n📌 Di-pin: {pinned} grup\n\n⏰ Pesan akan di-unpin otomatis setelah 24 jam.",
+        "failed_send": "❌ Gagal mengirim ke grup {group}: {error}",
+        "header": "📢 **PENGUMUMAN**\n\n",
+        "footer": "\n\n─────────────\n📌 Pesan ini akan di-unpin otomatis dalam 24 jam."
     }
 }

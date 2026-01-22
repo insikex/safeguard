@@ -146,10 +146,23 @@ class Database:
                 )
             """)
             
+            # Pinned broadcasts table (for auto-unpin)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS pinned_broadcasts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    chat_id INTEGER,
+                    message_id INTEGER,
+                    unpin_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(chat_id, message_id)
+                )
+            """)
+            
             # Create indexes
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_chat ON users(chat_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_pending_expires ON pending_verifications(expires_at)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_stats_chat_date ON statistics(chat_id, stat_date)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pinned_unpin ON pinned_broadcasts(unpin_at)")
     
     # ==================== Group Methods ====================
     
@@ -440,6 +453,48 @@ class Database:
                 INSERT INTO action_logs (chat_id, admin_id, target_user_id, action_type, reason)
                 VALUES (?, ?, ?, ?, ?)
             """, (chat_id, admin_id, target_user_id, action_type, reason))
+    
+    # ==================== Broadcast Methods ====================
+    
+    def get_all_groups(self) -> List[Dict[str, Any]]:
+        """Get all groups from database"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT * FROM groups")
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def add_pinned_broadcast(self, chat_id: int, message_id: int, duration_hours: int = 24):
+        """Add a pinned broadcast to track for auto-unpin"""
+        unpin_at = datetime.now() + timedelta(hours=duration_hours)
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT OR REPLACE INTO pinned_broadcasts (chat_id, message_id, unpin_at)
+                VALUES (?, ?, ?)
+            """, (chat_id, message_id, unpin_at))
+    
+    def get_expired_pins(self) -> List[Dict[str, Any]]:
+        """Get all pins that need to be unpinned"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM pinned_broadcasts WHERE unpin_at < ?",
+                (datetime.now(),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def delete_pinned_broadcast(self, chat_id: int, message_id: int):
+        """Delete a pinned broadcast record"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM pinned_broadcasts WHERE chat_id = ? AND message_id = ?",
+                (chat_id, message_id)
+            )
+    
+    def cleanup_expired_pins(self):
+        """Delete all expired pin records"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM pinned_broadcasts WHERE unpin_at < ?",
+                (datetime.now(),)
+            )
 
 
 # Global database instance

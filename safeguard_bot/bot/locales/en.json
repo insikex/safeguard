@@ -82,6 +82,7 @@
     "help": {
         "title": "📖 **Safeguard Bot Help**\n\n",
         "admin_commands": "**👮 Admin Commands:**\n/settings - Settings menu\n/warn [reason] - Give warning (reply)\n/unwarn - Remove warning (reply)\n/kick [reason] - Kick user (reply)\n/ban [reason] - Ban user (reply)\n/unban - Unban user (reply)\n/mute [duration] - Mute user (reply)\n/unmute - Unmute user (reply)\n/stats - Group statistics",
+        "owner_commands": "**👑 Bot Owner Commands:**\n/broadcast [message] - Broadcast to all groups (auto-pin 24h)",
         "user_commands": "**📋 General Commands:**\n/help - This help\n/rules - Group rules\n/mystatus - Your status in group",
         "footer": "\n\n💡 **Tip:** Reply to a user's message to use admin commands."
     },
@@ -116,5 +117,16 @@
         "hours": "hours",
         "days": "days",
         "forever": "forever"
+    },
+    "broadcast": {
+        "not_owner": "⚠️ This command is for bot owners only!",
+        "usage": "📢 **How to Use Broadcast:**\n\n1️⃣ **Text Broadcast:**\n`/broadcast [your message]`\n\n2️⃣ **Photo Broadcast with Caption:**\nReply to a photo with `/broadcast`\n\n⏰ Messages will be auto-pinned for 24 hours in every group.",
+        "no_groups": "⚠️ No groups registered in the database.",
+        "sending": "📤 **Sending broadcast to {total} groups...**\n\nPlease wait...",
+        "progress": "📤 Sending... {current}/{total} groups",
+        "completed": "✅ **Broadcast Complete!**\n\n📊 **Statistics:**\n✅ Success: {success} groups\n❌ Failed: {failed} groups\n📌 Pinned: {pinned} groups\n\n⏰ Messages will be auto-unpinned after 24 hours.",
+        "failed_send": "❌ Failed to send to group {group}: {error}",
+        "header": "📢 **ANNOUNCEMENT**\n\n",
+        "footer": "\n\n─────────────\n📌 This message will be auto-unpinned in 24 hours."
     }
 }

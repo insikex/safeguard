@@ -13,7 +13,9 @@ from .admin import (
     unban_command,
     mute_command,
     unmute_command,
-    stats_command
+    stats_command,
+    broadcast_command,
+    unpin_expired_broadcasts
 )
 from .verification import (
     new_member_handler,
@@ -40,6 +42,8 @@ __all__ = [
     "mute_command",
     "unmute_command",
     "stats_command",
+    "broadcast_command",
+    "unpin_expired_broadcasts",
     
     # Verification handlers
     "new_member_handler",
