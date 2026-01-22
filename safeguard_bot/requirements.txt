@@ -1,0 +1,15 @@
+# ===========================================
+# Safeguard Bot Dependencies
+# ===========================================
+
+# Telegram Bot API
+python-telegram-bot[job-queue]==21.0.1
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# HTTP Client (for portal verification)
+aiohttp==3.9.1
+
+# Additional utilities
+httpx==0.26.0

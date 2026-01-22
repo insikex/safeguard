@@ -1,0 +1,120 @@
+{
+    "welcome": {
+        "start_private": "👮‍♂️ **Safeguard Bot - Pelindung Grup Telegram**\n\nHalo {name}! Saya adalah bot pelindung grup yang akan membantu menjaga keamanan grup Anda dari spam, bot, dan pengguna berbahaya.\n\n**🛡️ Fitur Utama:**\n🔹 Verifikasi member baru (CAPTCHA)\n🔹 Anti-flood (spam pesan)\n🔹 Anti-link (blokir link)\n🔹 Anti-spam otomatis\n🔹 Sistem peringatan (warn)\n🔹 Pesan selamat datang kustom\n🔹 Auto-kick spam/bot\n🔹 Statistik grup\n\n**📋 Perintah Admin:**\n/settings - Pengaturan bot\n/warn - Beri peringatan\n/unwarn - Hapus peringatan\n/kick - Kick user\n/ban - Ban user\n/mute - Bisukan user\n/unmute - Aktifkan kembali\n/stats - Statistik grup\n\n**📖 Perintah Umum:**\n/help - Bantuan lengkap\n/rules - Aturan grup\n/mystatus - Status Anda\n\n➕ **Tambahkan saya ke grup dan jadikan admin untuk mulai melindungi grup Anda!**",
+        "start_group": "✅ Bot aktif di grup ini!\n\nGunakan /help untuk melihat perintah yang tersedia.\nGunakan /settings untuk mengatur bot (khusus admin).",
+        "new_member": "👋 Selamat datang {name} di **{group}**!\n\nSilakan baca aturan grup dan nikmati diskusi.",
+        "new_member_verify": "👋 Halo {name}!\n\nSelamat datang di **{group}**!\n\n🔐 Untuk mengakses grup ini, silakan verifikasi bahwa Anda bukan bot dengan menyelesaikan tantangan di bawah.\n\n⏱️ Anda memiliki waktu {timeout} detik."
+    },
+    "verification": {
+        "button_prompt": "Klik tombol di bawah untuk memverifikasi:",
+        "button_text": "✅ Saya Bukan Bot",
+        "math_prompt": "Berapa hasil dari **{num1} {operator} {num2}**?",
+        "emoji_prompt": "Pilih emoji yang sesuai: {emoji}",
+        "portal_prompt": "Klik tombol di bawah untuk verifikasi melalui portal:",
+        "portal_button": "🌐 Verifikasi via Portal",
+        "success": "✅ **Verifikasi Berhasil!**\n\nSelamat datang di grup, {name}! Sekarang Anda bisa mengirim pesan.",
+        "failed": "❌ **Verifikasi Gagal!**\n\nJawaban salah. Sisa percobaan: {attempts}",
+        "timeout": "⏱️ **Waktu Habis!**\n\n{name} dikeluarkan karena tidak melakukan verifikasi dalam waktu yang ditentukan.",
+        "kicked": "❌ User {name} dikeluarkan karena gagal verifikasi.",
+        "wrong_user": "⚠️ Tombol ini bukan untuk Anda!",
+        "already_verified": "✅ Anda sudah terverifikasi!",
+        "max_attempts": "❌ **Percobaan Habis!**\n\n{name} dikeluarkan karena gagal verifikasi sebanyak {max} kali."
+    },
+    "admin": {
+        "not_admin": "⚠️ Perintah ini hanya untuk admin!",
+        "not_creator": "⚠️ Perintah ini hanya untuk pemilik grup!",
+        "need_reply": "⚠️ Balas pesan user yang ingin diproses!",
+        "cannot_admin": "⚠️ Tidak bisa memproses admin lain!",
+        "cannot_self": "⚠️ Tidak bisa memproses diri sendiri!",
+        "warn_success": "⚠️ **Peringatan [{current}/{max}]**\n\nUser: {user}\nAlasan: {reason}\n\n{remaining} peringatan lagi sebelum di-kick.",
+        "warn_kicked": "🚫 **User Di-Kick!**\n\nUser: {user}\nAlasan: Mencapai batas peringatan ({max}x)",
+        "unwarn_success": "✅ **Peringatan Dihapus**\n\nUser: {user}\nPeringatan tersisa: {remaining}/{max}",
+        "unwarn_none": "ℹ️ User {user} tidak memiliki peringatan.",
+        "kick_success": "🚫 **User Di-Kick!**\n\nUser: {user}\nOleh: {admin}\nAlasan: {reason}",
+        "ban_success": "🔨 **User Di-Ban!**\n\nUser: {user}\nOleh: {admin}\nAlasan: {reason}",
+        "unban_success": "✅ **User Di-Unban!**\n\nUser: {user}\nOleh: {admin}",
+        "mute_success": "🔇 **User Di-Mute!**\n\nUser: {user}\nOleh: {admin}\nDurasi: {duration}\nAlasan: {reason}",
+        "unmute_success": "🔊 **User Di-Unmute!**\n\nUser: {user}\nOleh: {admin}",
+        "user_not_found": "⚠️ User tidak ditemukan!",
+        "action_failed": "❌ Gagal melakukan aksi: {error}"
+    },
+    "settings": {
+        "title": "⚙️ **Pengaturan Grup**\n\nKlik tombol untuk mengaktifkan/menonaktifkan fitur:",
+        "welcome_toggle": "💬 Pesan Selamat Datang",
+        "verify_toggle": "🔐 Verifikasi Member",
+        "antiflood_toggle": "🌊 Anti-Flood",
+        "antilink_toggle": "🔗 Anti-Link",
+        "antispam_toggle": "🚫 Anti-Spam",
+        "antibadword_toggle": "🤬 Anti-Kata Kasar",
+        "verify_type": "📋 Tipe Verifikasi: {type}",
+        "warn_limit": "⚠️ Batas Peringatan: {limit}",
+        "language": "🌐 Bahasa: {lang}",
+        "close_btn": "❌ Tutup",
+        "back_btn": "◀️ Kembali",
+        "updated": "✅ Pengaturan diperbarui!",
+        "verify_types": {
+            "button": "Tombol",
+            "math": "Matematika",
+            "emoji": "Emoji",
+            "portal": "Portal Web"
+        },
+        "select_verify_type": "📋 **Pilih Tipe Verifikasi:**",
+        "select_language": "🌐 **Pilih Bahasa Bot:**",
+        "select_warn_limit": "⚠️ **Pilih Batas Peringatan:**"
+    },
+    "protection": {
+        "flood_detected": "🌊 **Flood Terdeteksi!**\n\n{user} telah di-mute selama {duration} detik karena mengirim pesan terlalu cepat.",
+        "link_deleted": "🔗 **Link Dihapus!**\n\n{user}, link tidak diizinkan di grup ini!",
+        "spam_detected": "🚫 **Spam Terdeteksi!**\n\nPesan dari {user} telah dihapus.",
+        "badword_detected": "🤬 **Kata Terlarang!**\n\n{user}, jaga bahasa Anda!",
+        "bot_detected": "🤖 **Bot Terdeteksi!**\n\nUser {user} terdeteksi sebagai bot dan dikeluarkan."
+    },
+    "stats": {
+        "title": "📊 **Statistik Grup**\n\n",
+        "total_members": "👥 Total Member: {count}",
+        "verified_today": "✅ Verifikasi Hari Ini: {count}",
+        "kicked_today": "🚫 Kick Hari Ini: {count}",
+        "warnings_today": "⚠️ Peringatan Hari Ini: {count}",
+        "messages_today": "💬 Pesan Hari Ini: {count}",
+        "spam_blocked": "🚫 Spam Diblokir: {count}",
+        "links_blocked": "🔗 Link Diblokir: {count}"
+    },
+    "help": {
+        "title": "📖 **Bantuan Safeguard Bot**\n\n",
+        "admin_commands": "**👮 Perintah Admin:**\n/settings - Menu pengaturan\n/warn [alasan] - Beri peringatan (reply)\n/unwarn - Hapus peringatan (reply)\n/kick [alasan] - Kick user (reply)\n/ban [alasan] - Ban user (reply)\n/unban - Unban user (reply)\n/mute [durasi] - Mute user (reply)\n/unmute - Unmute user (reply)\n/stats - Statistik grup",
+        "user_commands": "**📋 Perintah Umum:**\n/help - Bantuan ini\n/rules - Aturan grup\n/mystatus - Status Anda di grup",
+        "footer": "\n\n💡 **Tips:** Reply ke pesan user untuk menggunakan perintah admin."
+    },
+    "rules": {
+        "not_set": "📜 Aturan grup belum diatur oleh admin.",
+        "title": "📜 **Aturan Grup**\n\n{rules}"
+    },
+    "status": {
+        "title": "📋 **Status Anda**\n\n",
+        "user": "👤 Nama: {name}\n",
+        "id": "🆔 ID: `{id}`\n",
+        "warnings": "⚠️ Peringatan: {count}/{max}\n",
+        "verified": "✅ Status: Terverifikasi\n",
+        "muted": "🔇 Status: Di-mute\n",
+        "role": "👑 Peran: {role}"
+    },
+    "errors": {
+        "generic": "❌ Terjadi kesalahan. Silakan coba lagi.",
+        "no_permission": "❌ Bot tidak memiliki izin yang cukup!",
+        "private_only": "⚠️ Perintah ini hanya bisa digunakan di chat pribadi.",
+        "group_only": "⚠️ Perintah ini hanya bisa digunakan di grup."
+    },
+    "buttons": {
+        "verify": "✅ Verifikasi",
+        "cancel": "❌ Batal",
+        "confirm": "✅ Konfirmasi",
+        "back": "◀️ Kembali"
+    },
+    "time": {
+        "seconds": "detik",
+        "minutes": "menit",
+        "hours": "jam",
+        "days": "hari",
+        "forever": "selamanya"
+    }
+}
