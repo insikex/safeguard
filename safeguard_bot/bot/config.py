@@ -47,6 +47,10 @@ class BotConfig:
     web_port: int = field(default_factory=lambda: int(os.getenv("WEB_PORT", "8080")))
     web_url: str = field(default_factory=lambda: os.getenv("WEB_URL", "http://localhost:8080"))
     
+    # CryptoBot Payment Settings
+    crypto_pay_token: str = field(default_factory=lambda: os.getenv("CRYPTO_PAY_TOKEN", ""))
+    crypto_pay_testnet: bool = field(default_factory=lambda: os.getenv("CRYPTO_PAY_TESTNET", "false").lower() == "true")
+    
     def validate(self) -> bool:
         """Validate required configuration"""
         if not self.token:

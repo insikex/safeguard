@@ -146,10 +146,79 @@ class Database:
                 )
             """)
             
+            # Bot users table (users who started the bot in private chat)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS bot_users (
+                    user_id INTEGER PRIMARY KEY,
+                    username TEXT,
+                    full_name TEXT,
+                    language TEXT DEFAULT 'en',
+                    is_premium INTEGER DEFAULT 0,
+                    premium_until TIMESTAMP,
+                    premium_plan TEXT,
+                    total_spent REAL DEFAULT 0,
+                    referral_code TEXT UNIQUE,
+                    referred_by INTEGER,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Premium subscriptions table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS premium_subscriptions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    plan TEXT,
+                    amount REAL,
+                    currency TEXT DEFAULT 'USD',
+                    duration_days INTEGER,
+                    start_date TIMESTAMP,
+                    end_date TIMESTAMP,
+                    status TEXT DEFAULT 'active',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES bot_users(user_id)
+                )
+            """)
+            
+            # Payment invoices table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS payment_invoices (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    invoice_id TEXT UNIQUE,
+                    amount REAL,
+                    currency TEXT,
+                    plan TEXT,
+                    status TEXT DEFAULT 'pending',
+                    pay_url TEXT,
+                    paid_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES bot_users(user_id)
+                )
+            """)
+            
+            # Broadcasts table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS broadcasts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    admin_id INTEGER,
+                    message_text TEXT,
+                    photo_file_id TEXT,
+                    total_users INTEGER DEFAULT 0,
+                    success_count INTEGER DEFAULT 0,
+                    failed_count INTEGER DEFAULT 0,
+                    status TEXT DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
             # Create indexes
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_chat ON users(chat_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_pending_expires ON pending_verifications(expires_at)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_stats_chat_date ON statistics(chat_id, stat_date)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_bot_users_premium ON bot_users(is_premium)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_payment_invoices_status ON payment_invoices(status)")
     
     # ==================== Group Methods ====================
     
@@ -440,6 +509,252 @@ class Database:
                 INSERT INTO action_logs (chat_id, admin_id, target_user_id, action_type, reason)
                 VALUES (?, ?, ?, ?, ?)
             """, (chat_id, admin_id, target_user_id, action_type, reason))
+
+
+    # ==================== Bot User Methods ====================
+    
+    def get_bot_user(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get bot user by ID"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT * FROM bot_users WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def create_or_update_bot_user(self, user_id: int, **kwargs) -> Dict[str, Any]:
+        """Create or update bot user"""
+        import secrets
+        existing = self.get_bot_user(user_id)
+        
+        if existing:
+            if kwargs:
+                updates = [f"{k} = ?" for k in kwargs.keys()]
+                updates.append("last_active = CURRENT_TIMESTAMP")
+                values = list(kwargs.values()) + [user_id]
+                
+                with self.get_cursor() as cursor:
+                    cursor.execute(
+                        f"UPDATE bot_users SET {', '.join(updates)} WHERE user_id = ?",
+                        values
+                    )
+        else:
+            # Generate unique referral code
+            referral_code = secrets.token_hex(4).upper()
+            columns = ["user_id", "referral_code"] + list(kwargs.keys())
+            placeholders = ["?"] * len(columns)
+            values = [user_id, referral_code] + list(kwargs.values())
+            
+            with self.get_cursor() as cursor:
+                cursor.execute(
+                    f"INSERT INTO bot_users ({', '.join(columns)}) VALUES ({', '.join(placeholders)})",
+                    values
+                )
+        
+        return self.get_bot_user(user_id)
+    
+    def get_all_bot_users(self) -> List[Dict[str, Any]]:
+        """Get all bot users for broadcasting"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT * FROM bot_users")
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def get_premium_users(self) -> List[Dict[str, Any]]:
+        """Get all premium users"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM bot_users WHERE is_premium = 1 AND premium_until > ?",
+                (datetime.now(),)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def get_bot_users_count(self) -> int:
+        """Get total count of bot users"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) as count FROM bot_users")
+            row = cursor.fetchone()
+            return row['count'] if row else 0
+    
+    # ==================== Premium Methods ====================
+    
+    def set_user_premium(self, user_id: int, plan: str, duration_days: int, amount: float):
+        """Set user as premium"""
+        user = self.get_bot_user(user_id)
+        
+        # Calculate end date
+        if user and user.get('is_premium') and user.get('premium_until'):
+            # Extend existing premium
+            try:
+                current_end = datetime.fromisoformat(str(user['premium_until']))
+                if current_end > datetime.now():
+                    end_date = current_end + timedelta(days=duration_days)
+                else:
+                    end_date = datetime.now() + timedelta(days=duration_days)
+            except:
+                end_date = datetime.now() + timedelta(days=duration_days)
+        else:
+            end_date = datetime.now() + timedelta(days=duration_days)
+        
+        start_date = datetime.now()
+        
+        with self.get_cursor() as cursor:
+            # Update bot user
+            cursor.execute("""
+                UPDATE bot_users 
+                SET is_premium = 1, premium_until = ?, premium_plan = ?, 
+                    total_spent = total_spent + ?
+                WHERE user_id = ?
+            """, (end_date, plan, amount, user_id))
+            
+            # Create subscription record
+            cursor.execute("""
+                INSERT INTO premium_subscriptions 
+                (user_id, plan, amount, duration_days, start_date, end_date, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'active')
+            """, (user_id, plan, amount, duration_days, start_date, end_date))
+    
+    def check_premium_status(self, user_id: int) -> bool:
+        """Check if user has active premium"""
+        user = self.get_bot_user(user_id)
+        if not user or not user.get('is_premium'):
+            return False
+        
+        premium_until = user.get('premium_until')
+        if not premium_until:
+            return False
+        
+        try:
+            end_date = datetime.fromisoformat(str(premium_until))
+            return end_date > datetime.now()
+        except:
+            return False
+    
+    def get_premium_info(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get user's premium subscription info"""
+        user = self.get_bot_user(user_id)
+        if not user:
+            return None
+        
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM premium_subscriptions 
+                WHERE user_id = ? 
+                ORDER BY created_at DESC 
+                LIMIT 1
+            """, (user_id,))
+            row = cursor.fetchone()
+            
+        return {
+            'is_premium': self.check_premium_status(user_id),
+            'premium_until': user.get('premium_until'),
+            'premium_plan': user.get('premium_plan'),
+            'total_spent': user.get('total_spent', 0),
+            'last_subscription': dict(row) if row else None
+        }
+    
+    def expire_premium(self):
+        """Expire all ended premium subscriptions"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                UPDATE bot_users 
+                SET is_premium = 0 
+                WHERE is_premium = 1 AND premium_until < ?
+            """, (datetime.now(),))
+            
+            cursor.execute("""
+                UPDATE premium_subscriptions 
+                SET status = 'expired' 
+                WHERE status = 'active' AND end_date < ?
+            """, (datetime.now(),))
+    
+    # ==================== Payment Invoice Methods ====================
+    
+    def create_invoice(self, user_id: int, invoice_id: str, amount: float, 
+                      currency: str, plan: str, pay_url: str) -> Dict[str, Any]:
+        """Create payment invoice record"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO payment_invoices 
+                (user_id, invoice_id, amount, currency, plan, pay_url, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'pending')
+            """, (user_id, invoice_id, amount, currency, plan, pay_url))
+        
+        return self.get_invoice(invoice_id)
+    
+    def get_invoice(self, invoice_id: str) -> Optional[Dict[str, Any]]:
+        """Get invoice by ID"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM payment_invoices WHERE invoice_id = ?",
+                (invoice_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def get_pending_invoices(self, user_id: int) -> List[Dict[str, Any]]:
+        """Get user's pending invoices"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM payment_invoices WHERE user_id = ? AND status = 'pending'",
+                (user_id,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def update_invoice_status(self, invoice_id: str, status: str):
+        """Update invoice status"""
+        with self.get_cursor() as cursor:
+            if status == 'paid':
+                cursor.execute("""
+                    UPDATE payment_invoices 
+                    SET status = ?, paid_at = CURRENT_TIMESTAMP 
+                    WHERE invoice_id = ?
+                """, (status, invoice_id))
+            else:
+                cursor.execute(
+                    "UPDATE payment_invoices SET status = ? WHERE invoice_id = ?",
+                    (status, invoice_id)
+                )
+    
+    # ==================== Broadcast Methods ====================
+    
+    def create_broadcast(self, admin_id: int, message_text: str, 
+                        photo_file_id: str = None, total_users: int = 0) -> int:
+        """Create broadcast record, returns broadcast ID"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO broadcasts 
+                (admin_id, message_text, photo_file_id, total_users, status)
+                VALUES (?, ?, ?, ?, 'sending')
+            """, (admin_id, message_text, photo_file_id, total_users))
+            return cursor.lastrowid
+    
+    def update_broadcast_progress(self, broadcast_id: int, success: int = 0, failed: int = 0):
+        """Update broadcast progress"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                UPDATE broadcasts 
+                SET success_count = success_count + ?, failed_count = failed_count + ?
+                WHERE id = ?
+            """, (success, failed, broadcast_id))
+    
+    def complete_broadcast(self, broadcast_id: int):
+        """Mark broadcast as completed"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "UPDATE broadcasts SET status = 'completed' WHERE id = ?",
+                (broadcast_id,)
+            )
+    
+    def get_broadcast_stats(self, broadcast_id: int) -> Optional[Dict[str, Any]]:
+        """Get broadcast statistics"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT * FROM broadcasts WHERE id = ?", (broadcast_id,))
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
 
 
 # Global database instance

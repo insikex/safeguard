@@ -22,6 +22,8 @@ from bot.handlers import (
     help_command,
     rules_command,
     mystatus_command,
+    help_callback,
+    start_callback,
     
     # Admin handlers
     warn_command,
@@ -43,7 +45,16 @@ from bot.handlers import (
     
     # Moderation handlers
     message_handler,
-    check_new_bot
+    check_new_bot,
+    
+    # Premium handlers
+    premium_command,
+    premium_callback,
+    
+    # Broadcast handlers
+    broadcast_stats_command,
+    broadcast_callback,
+    get_broadcast_conversation_handler
 )
 
 
@@ -65,14 +76,26 @@ def create_application() -> Application:
     # Validate config
     config.validate()
     
+    # Initialize CryptoBot payment if configured
+    if config.crypto_pay_token:
+        from bot.services import init_crypto_pay
+        init_crypto_pay(config.crypto_pay_token, config.crypto_pay_testnet)
+        logger.info("CryptoBot payment service initialized")
+    
     # Create application
     application = Application.builder().token(config.token).build()
+    
+    # Add broadcast conversation handler (must be added early)
+    application.add_handler(get_broadcast_conversation_handler())
     
     # Add command handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("rules", rules_command))
     application.add_handler(CommandHandler("mystatus", mystatus_command))
+    
+    # Premium command
+    application.add_handler(CommandHandler("premium", premium_command))
     
     # Admin commands
     application.add_handler(CommandHandler("settings", settings_command))
@@ -85,6 +108,9 @@ def create_application() -> Application:
     application.add_handler(CommandHandler("unmute", unmute_command))
     application.add_handler(CommandHandler("stats", stats_command))
     
+    # Owner commands
+    application.add_handler(CommandHandler("botstats", broadcast_stats_command))
+    
     # Callback query handlers
     application.add_handler(CallbackQueryHandler(
         verification_callback,
@@ -93,6 +119,22 @@ def create_application() -> Application:
     application.add_handler(CallbackQueryHandler(
         settings_callback,
         pattern=r"^settings_"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        premium_callback,
+        pattern=r"^premium_"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        broadcast_callback,
+        pattern=r"^broadcast_"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        help_callback,
+        pattern=r"^help_menu$"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        start_callback,
+        pattern=r"^start_menu$"
     ))
     
     # New member handler

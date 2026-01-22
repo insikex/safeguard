@@ -4,7 +4,7 @@ Start & Help Handlers
 Handlers for /start and /help commands.
 """
 
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 
@@ -18,13 +18,62 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     
     if chat.type == "private":
-        # Private chat - show full welcome message
+        # Register bot user
+        db.create_or_update_bot_user(
+            user.id,
+            username=user.username,
+            full_name=user.full_name,
+            language=detect_lang(user)
+        )
+        
+        # Check for deep link
+        if context.args and len(context.args) > 0:
+            deep_link = context.args[0]
+            
+            if deep_link == "check_payment":
+                # Handle payment check
+                from bot.handlers.premium import check_payment_start
+                await check_payment_start(update, context)
+                return
+            
+            elif deep_link == "premium":
+                # Show premium menu
+                from bot.handlers.premium import premium_command
+                await premium_command(update, context)
+                return
+        
+        # Private chat - show full welcome message with buttons
         text = get_text(
             "welcome.start_private",
             user,
             name=get_user_display_name(user)
         )
-        await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+        
+        # Add inline keyboard with Premium button
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "💎 Premium",
+                    callback_data="premium_menu"
+                ),
+                InlineKeyboardButton(
+                    "📖 Help",
+                    callback_data="help_menu"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "➕ Add to Group",
+                    url=f"https://t.me/{(await context.bot.get_me()).username}?startgroup=true"
+                )
+            ]
+        ]
+        
+        await update.message.reply_text(
+            text, 
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
     else:
         # Group chat
         # Ensure group exists in database
@@ -123,3 +172,72 @@ async def mystatus_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text += get_text("status.role", user, role=role)
     
     await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+
+
+async def help_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle help_menu callback"""
+    query = update.callback_query
+    user = update.effective_user
+    
+    await query.answer()
+    
+    text = (
+        get_text("help.title", user) +
+        get_text("help.admin_commands", user) +
+        "\n\n" +
+        get_text("help.user_commands", user) +
+        get_text("help.footer", user)
+    )
+    
+    keyboard = [[
+        InlineKeyboardButton(
+            get_text("buttons.back", user),
+            callback_data="start_menu"
+        )
+    ]]
+    
+    await query.edit_message_text(
+        text, 
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+
+async def start_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle start_menu callback - return to main menu"""
+    query = update.callback_query
+    user = update.effective_user
+    
+    await query.answer()
+    
+    # Show main menu again
+    text = get_text(
+        "welcome.start_private",
+        user,
+        name=get_user_display_name(user)
+    )
+    
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "💎 Premium",
+                callback_data="premium_menu"
+            ),
+            InlineKeyboardButton(
+                "📖 Help",
+                callback_data="help_menu"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "➕ Add to Group",
+                url=f"https://t.me/{(await context.bot.get_me()).username}?startgroup=true"
+            )
+        ]
+    ]
+    
+    await query.edit_message_text(
+        text, 
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
