@@ -301,20 +301,28 @@ async def unpin_expired_messages(context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"Processed {len(messages_to_unpin)} expired pinned messages")
 
 
-# Broadcast conversation handler
-broadcast_conversation = ConversationHandler(
-    entry_points=[CommandHandler("broadcast", broadcast_command)],
-    states={
-        WAITING_BROADCAST_CONTENT: [
-            MessageHandler(filters.PHOTO | filters.TEXT & ~filters.COMMAND, receive_broadcast_content)
+# Broadcast conversation handler factory function
+def create_broadcast_conversation() -> ConversationHandler:
+    """Create and return the broadcast ConversationHandler.
+    
+    This is a factory function to avoid weak reference issues
+    with python-telegram-bot 21.x when ConversationHandler is
+    created at module level.
+    """
+    return ConversationHandler(
+        entry_points=[CommandHandler("broadcast", broadcast_command)],
+        states={
+            WAITING_BROADCAST_CONTENT: [
+                MessageHandler(filters.PHOTO | filters.TEXT & ~filters.COMMAND, receive_broadcast_content)
+            ],
+            CONFIRM_BROADCAST: [
+                CallbackQueryHandler(confirm_broadcast, pattern=r"^broadcast_")
+            ]
+        },
+        fallbacks=[
+            CommandHandler("cancel", cancel_broadcast),
+            CallbackQueryHandler(cancel_broadcast, pattern=r"^broadcast_cancel$")
         ],
-        CONFIRM_BROADCAST: [
-            CallbackQueryHandler(confirm_broadcast, pattern=r"^broadcast_")
-        ]
-    },
-    fallbacks=[
-        CommandHandler("cancel", cancel_broadcast),
-        CallbackQueryHandler(cancel_broadcast, pattern=r"^broadcast_cancel$")
-    ],
-    per_user=True
-)
+        per_user=True,
+        per_message=False
+    )

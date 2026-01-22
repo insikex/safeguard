@@ -24,7 +24,7 @@ from .verification import (
 from .settings import settings_command, settings_callback
 from .moderation import message_handler, check_new_bot
 from .broadcast import (
-    broadcast_conversation,
+    create_broadcast_conversation,
     unpin_expired_messages
 )
 from .premium import (
@@ -67,7 +67,7 @@ __all__ = [
     "check_new_bot",
     
     # Broadcast handlers
-    "broadcast_conversation",
+    "create_broadcast_conversation",
     "unpin_expired_messages",
     
     # Premium handlers

@@ -48,7 +48,7 @@ from bot.handlers import (
     check_new_bot,
     
     # Broadcast handlers
-    broadcast_conversation,
+    create_broadcast_conversation,
     unpin_expired_messages,
     
     # Premium handlers
@@ -100,7 +100,7 @@ def create_application() -> Application:
     application.add_handler(CommandHandler("premium", premium_command))
     
     # Broadcast conversation handler (must be before other handlers)
-    application.add_handler(broadcast_conversation)
+    application.add_handler(create_broadcast_conversation())
     
     # Callback query handlers
     application.add_handler(CallbackQueryHandler(
