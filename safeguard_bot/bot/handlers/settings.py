@@ -6,7 +6,7 @@ Handlers for group settings management with inline keyboard.
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
-from telegram.constants import ParseMode
+from telegram.constants import ParseMode, ChatMemberStatus
 
 from bot.services import get_text, db, detect_lang, set_lang
 from bot.utils import admin_required, group_only
@@ -149,7 +149,7 @@ async def settings_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Check if user is admin
     member = await chat.get_member(user.id)
-    if member.status not in ['creator', 'administrator']:
+    if member.status not in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
         await query.answer(
             get_text("admin.not_admin", user),
             show_alert=True

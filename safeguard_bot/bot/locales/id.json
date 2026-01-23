@@ -82,8 +82,9 @@
     "help": {
         "title": "📖 **Bantuan Safeguard Bot**\n\n",
         "admin_commands": "**👮 Perintah Admin:**\n/settings - Menu pengaturan\n/warn [alasan] - Beri peringatan (reply)\n/unwarn - Hapus peringatan (reply)\n/kick [alasan] - Kick user (reply)\n/ban [alasan] - Ban user (reply)\n/unban - Unban user (reply)\n/mute [durasi] - Mute user (reply)\n/unmute - Unmute user (reply)\n/stats - Statistik grup",
-        "user_commands": "**📋 Perintah Umum:**\n/help - Bantuan ini\n/rules - Aturan grup\n/mystatus - Status Anda di grup",
-        "footer": "\n\n💡 **Tips:** Reply ke pesan user untuk menggunakan perintah admin."
+        "user_commands": "**📋 Perintah Umum:**\n/help - Bantuan ini\n/rules - Aturan grup\n/mystatus - Status Anda di grup\n/mygroups - Lihat grup yang Anda kelola",
+        "remote_commands": "**📱 Manajemen Jarak Jauh:**\nGunakan perintah admin dari chat pribadi!\n`/kick @username alasan` - Kick user\n`/ban @username alasan` - Ban user\n`/mute @username alasan` - Mute user\n/mygroups - Pilih grup mana yang akan dikelola",
+        "footer": "\n\n💡 **Tips:** Reply ke pesan user di grup, atau gunakan @username di chat pribadi!"
     },
     "rules": {
         "not_set": "📜 Aturan grup belum diatur oleh admin.",
@@ -155,5 +156,55 @@
         "payment_pending": "⏳ Pembayaran belum diterima. Silakan selesaikan pembayaran terlebih dahulu.",
         "payment_expired": "⏰ Invoice pembayaran telah kedaluwarsa. Silakan buat pembayaran baru.",
         "check_error": "❌ Error mengecek status pembayaran. Silakan coba lagi."
+    },
+    "group_management": {
+        "bot_added": "👮‍♂️ **Halo! Saya @SafeRobot**\n\nTerima kasih {adder} telah menambahkan saya ke **{group}**!\n\n🛡️ Saya akan membantu melindungi grup ini dari spam, bot, dan pengguna berbahaya.\n\n**Untuk memulai:**\n1️⃣ Jadikan saya admin dengan izin yang diperlukan\n2️⃣ Klik tombol di bawah untuk mengatur pengaturan\n\n📋 Gunakan /help untuk melihat semua perintah yang tersedia.",
+        "settings_btn": "⚙️ Buka Pengaturan",
+        "loading_groups": "🔄 Memuat grup Anda...",
+        "no_groups": "📭 Anda tidak memiliki grup di mana Anda admin dan bot ini hadir.\n\nTambahkan saya ke grup dan jadikan diri Anda admin untuk mengelolanya di sini!",
+        "your_groups": "📋 **Grup Anda** ({count} total)\n\nBerikut adalah grup di mana Anda adalah admin:",
+        "select_group_hint": "💡 Klik grup untuk melihat detail dan mengelolanya.",
+        "select_group_for_action": "📋 **Pilih Grup**\n\nPilih grup di mana Anda ingin **{command}** `{target}`:",
+        "action_usage": "📝 **Penggunaan:** `/{command} @username [alasan]`\n\nAtau: `/{command} user_id [alasan]`\n\n**Contoh:**\n`/{command} @spammer123 Spam`\n`/{command} 123456789 Iklan`\n\n💡 Anda dapat menggunakan perintah ini dari sini (chat pribadi) untuk mengelola grup Anda dari jarak jauh!",
+        "invalid_target": "❌ Target tidak valid. Gunakan @username atau ID numerik.",
+        "searching_user": "🔍 Mencari user @{username}...",
+        "user_not_found": "❌ User @{username} tidak ditemukan. Pastikan user tersebut pernah berinteraksi dengan bot ini.",
+        "action_success": "✅ **Aksi Berhasil!**\n\n👤 User: {user}\n📋 Aksi: **{action}**\n👪 Grup: **{group}**\n📝 Alasan: {reason}",
+        "warn_success": "⚠️ **Peringatan Ditambahkan!**\n\n👤 User: {user}\n👪 Grup: **{group}**\n📊 Peringatan: **{current}/{max}**\n📝 Alasan: {reason}",
+        "warn_kicked": "🚫 **User Di-Kick!**\n\n👤 User: {user}\n👪 Grup: **{group}**\n📝 Alasan: Mencapai batas peringatan ({max}x)",
+        "action_cancelled": "❌ Aksi dibatalkan.",
+        "action_expired": "⚠️ Sesi aksi kedaluwarsa. Silakan kirim perintah lagi.",
+        "group_info": "📋 **Info Grup**\n\n👪 **{title}**\n🆔 ID: `{chat_id}`\n👥 Member: {members}\n\n**Pengaturan:**\n🔐 Verifikasi: {verification}\n🌊 Anti-Flood: {antiflood}\n🔗 Anti-Link: {antilink}\n🚫 Anti-Spam: {antispam}",
+        "open_settings": "⚙️ Buka Pengaturan",
+        "group_not_accessible": "❌ Tidak dapat mengakses grup ini. Bot mungkin telah dihapus.",
+        "owner_no_groups": "📭 Tidak ada grup ditemukan di database.",
+        "owner_groups_title": "👪 **Semua Grup Bot** ({count} total)"
+    },
+    "owner_panel": {
+        "not_owner": "⚠️ Perintah ini hanya tersedia untuk pemilik bot.",
+        "main_menu": "🛠️ **Panel Admin Owner**\n\n📊 **Statistik Bot:**\n👥 Total User: **{total_users}**\n⭐ User Premium: **{total_premium}**\n👪 Grup: **{total_groups}**\n\nPilih aksi:",
+        "add_premium_btn": "➕ Tambah User Premium",
+        "remove_premium_btn": "➖ Hapus Premium",
+        "list_premium_btn": "📋 Daftar User Premium",
+        "list_groups_btn": "👪 Daftar Semua Grup",
+        "groups_list_title": "👪 **Semua Grup Bot** ({count} total)",
+        "bot_stats_btn": "📊 Statistik Bot",
+        "close_btn": "❌ Tutup",
+        "back_btn": "◀️ Kembali",
+        "addpremium_usage": "📝 **Penggunaan:** `/addpremium <user_id> <hari>`\n\n**Contoh:**\n`/addpremium 123456789 30`\n\nIni akan memberikan 30 hari premium ke user 123456789.",
+        "removepremium_usage": "📝 **Penggunaan:** `/removepremium <user_id>`\n\n**Contoh:**\n`/removepremium 123456789`\n\nIni akan menghapus premium dari user 123456789.",
+        "invalid_args": "❌ Argumen tidak valid. Harap berikan user ID dan jumlah hari yang valid.",
+        "invalid_user_id": "❌ User ID tidak valid. Harap berikan user ID numerik yang valid.",
+        "invalid_days": "❌ Jumlah hari tidak valid. Harap berikan angka antara 1 dan 365.",
+        "premium_added": "✅ **Premium Ditambahkan!**\n\n👤 User: **{user_name}**\n🆔 ID: `{user_id}`\n⏱️ Durasi: **{days} hari**\n\nPremium telah diaktifkan.",
+        "premium_granted": "🎉 **Selamat!**\n\nAnda telah diberikan langganan Premium selama **{days} hari** oleh pemilik bot!\n\nNikmati semua fitur premium.",
+        "premium_add_failed": "❌ Gagal menambahkan premium. Silakan coba lagi.",
+        "no_premium": "ℹ️ User `{user_id}` tidak memiliki langganan premium aktif.",
+        "premium_removed": "✅ **Premium Dihapus!**\n\n👤 User: **{user_name}**\n🆔 ID: `{user_id}`\n\nLangganan premium telah dinonaktifkan.",
+        "no_premium_users": "📭 Tidak ada user premium aktif ditemukan.",
+        "premium_list_title": "📋 **User Premium Aktif**",
+        "add_premium_help": "➕ **Tambah User Premium**\n\nUntuk menambahkan premium ke user, kirim perintah berikut:\n\n`/addpremium <user_id> <hari>`\n\n**Contoh:**\n`/addpremium 123456789 30`\n\nUntuk mendapatkan ID user, mereka bisa menggunakan /start dan Anda akan melihat ID mereka di log, atau mereka bisa forward pesan dari diri sendiri ke @userinfobot.",
+        "remove_premium_help": "➖ **Hapus Premium**\n\nUntuk menghapus premium dari user, kirim perintah berikut:\n\n`/removepremium <user_id>`\n\n**Contoh:**\n`/removepremium 123456789`",
+        "bot_stats": "📊 **Statistik Bot**\n\n👥 Total User: **{total_users}**\n⭐ User Premium: **{total_premium}**\n👪 Grup: **{total_groups}**"
     }
 }

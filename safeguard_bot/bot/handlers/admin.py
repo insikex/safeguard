@@ -2,6 +2,7 @@
 Admin Command Handlers
 ======================
 Handlers for admin commands: warn, unwarn, kick, ban, mute, unmute, etc.
+Supports both group chat and private chat modes.
 """
 
 from telegram import Update, ChatPermissions
@@ -20,9 +21,22 @@ from bot.utils import (
 )
 
 
+async def warn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /warn command - supports both group and private chat"""
+    chat = update.effective_chat
+    
+    # If in private chat, redirect to group_action_command
+    if chat.type == "private":
+        from bot.handlers.group_management import group_action_command
+        return await group_action_command(update, context)
+    
+    # Otherwise, use the group version
+    return await _warn_command_group(update, context)
+
+
 @group_only
 @admin_required
-async def warn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def _warn_command_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /warn command"""
     user = update.effective_user
     chat = update.effective_chat
@@ -48,7 +62,7 @@ async def warn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Can't warn admins
     target_member = await chat.get_member(target.id)
-    if target_member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+    if target_member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
         await update.message.reply_text(
             get_text("admin.cannot_admin", user),
             parse_mode=ParseMode.MARKDOWN
@@ -119,10 +133,23 @@ async def warn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+async def unwarn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /unwarn command - supports both group and private chat"""
+    chat = update.effective_chat
+    
+    # If in private chat, redirect to group_action_command  
+    if chat.type == "private":
+        from bot.handlers.group_management import group_action_command
+        return await group_action_command(update, context)
+    
+    # Otherwise, use the group version
+    return await _unwarn_command_group(update, context)
+
+
 @group_only
 @admin_required
-async def unwarn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /unwarn command"""
+async def _unwarn_command_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /unwarn command in group"""
     user = update.effective_user
     chat = update.effective_chat
     
@@ -168,10 +195,23 @@ async def unwarn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def kick_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /kick command - supports both group and private chat"""
+    chat = update.effective_chat
+    
+    # If in private chat, redirect to group_action_command
+    if chat.type == "private":
+        from bot.handlers.group_management import group_action_command
+        return await group_action_command(update, context)
+    
+    # Otherwise, use the group version
+    return await _kick_command_group(update, context)
+
+
 @group_only
 @admin_required
-async def kick_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /kick command"""
+async def _kick_command_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /kick command in group"""
     user = update.effective_user
     chat = update.effective_chat
     
@@ -194,7 +234,7 @@ async def kick_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Can't kick admins
     target_member = await chat.get_member(target.id)
-    if target_member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+    if target_member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
         await update.message.reply_text(
             get_text("admin.cannot_admin", user),
             parse_mode=ParseMode.MARKDOWN
@@ -227,10 +267,23 @@ async def kick_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+async def ban_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /ban command - supports both group and private chat"""
+    chat = update.effective_chat
+    
+    # If in private chat, redirect to group_action_command
+    if chat.type == "private":
+        from bot.handlers.group_management import group_action_command
+        return await group_action_command(update, context)
+    
+    # Otherwise, use the group version
+    return await _ban_command_group(update, context)
+
+
 @group_only
 @admin_required
-async def ban_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /ban command"""
+async def _ban_command_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /ban command in group"""
     user = update.effective_user
     chat = update.effective_chat
     
@@ -253,7 +306,7 @@ async def ban_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Can't ban admins
     target_member = await chat.get_member(target.id)
-    if target_member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+    if target_member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
         await update.message.reply_text(
             get_text("admin.cannot_admin", user),
             parse_mode=ParseMode.MARKDOWN
@@ -285,10 +338,23 @@ async def ban_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+async def unban_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /unban command - supports both group and private chat"""
+    chat = update.effective_chat
+    
+    # If in private chat, redirect to group_action_command
+    if chat.type == "private":
+        from bot.handlers.group_management import group_action_command
+        return await group_action_command(update, context)
+    
+    # Otherwise, use the group version
+    return await _unban_command_group(update, context)
+
+
 @group_only
 @admin_required
-async def unban_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /unban command"""
+async def _unban_command_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /unban command in group"""
     user = update.effective_user
     chat = update.effective_chat
     
@@ -322,10 +388,23 @@ async def unban_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+async def mute_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /mute command - supports both group and private chat"""
+    chat = update.effective_chat
+    
+    # If in private chat, redirect to group_action_command
+    if chat.type == "private":
+        from bot.handlers.group_management import group_action_command
+        return await group_action_command(update, context)
+    
+    # Otherwise, use the group version
+    return await _mute_command_group(update, context)
+
+
 @group_only
 @admin_required
-async def mute_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /mute command"""
+async def _mute_command_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /mute command in group"""
     user = update.effective_user
     chat = update.effective_chat
     lang = detect_lang(user)
@@ -349,7 +428,7 @@ async def mute_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Can't mute admins
     target_member = await chat.get_member(target.id)
-    if target_member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+    if target_member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
         await update.message.reply_text(
             get_text("admin.cannot_admin", user),
             parse_mode=ParseMode.MARKDOWN
@@ -400,10 +479,23 @@ async def mute_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+async def unmute_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /unmute command - supports both group and private chat"""
+    chat = update.effective_chat
+    
+    # If in private chat, redirect to group_action_command
+    if chat.type == "private":
+        from bot.handlers.group_management import group_action_command
+        return await group_action_command(update, context)
+    
+    # Otherwise, use the group version
+    return await _unmute_command_group(update, context)
+
+
 @group_only
 @admin_required
-async def unmute_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /unmute command"""
+async def _unmute_command_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /unmute command in group"""
     user = update.effective_user
     chat = update.effective_chat
     

@@ -93,12 +93,12 @@ def format_duration(seconds: int, language: str = "en") -> str:
 
 def is_admin(member: ChatMember) -> bool:
     """Check if chat member is admin or creator"""
-    return member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]
+    return member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]
 
 
 def is_creator(member: ChatMember) -> bool:
     """Check if chat member is creator"""
-    return member.status == ChatMemberStatus.CREATOR
+    return member.status == ChatMemberStatus.OWNER
 
 
 def can_restrict_member(bot_member: ChatMember, target_member: ChatMember) -> bool:

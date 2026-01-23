@@ -860,5 +860,107 @@ class Database:
             """)
 
 
+    # ==================== Group Management Methods ====================
+    
+    def get_all_groups(self) -> List[Dict[str, Any]]:
+        """Get all groups from database"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT * FROM groups ORDER BY updated_at DESC")
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
+        """Get user by username from database"""
+        with self.get_cursor() as cursor:
+            # Search in users table
+            cursor.execute(
+                "SELECT * FROM users WHERE username = ? LIMIT 1",
+                (username,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+            
+            # Also search in bot_users table
+            cursor.execute(
+                "SELECT * FROM bot_users WHERE username = ? LIMIT 1",
+                (username,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def get_groups_count(self) -> int:
+        """Get total count of groups"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) as count FROM groups")
+            row = cursor.fetchone()
+            return row['count'] if row else 0
+    
+    # ==================== Owner Panel Methods ====================
+    
+    def get_total_bot_users(self) -> int:
+        """Get total count of bot users"""
+        return self.get_bot_users_count(include_blocked=False)
+    
+    def get_total_premium_users(self) -> int:
+        """Get total count of active premium users"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) as count FROM premium_subscriptions 
+                WHERE is_active = 1 AND end_date > ?
+            """, (datetime.now(),))
+            row = cursor.fetchone()
+            return row['count'] if row else 0
+    
+    def get_total_groups(self) -> int:
+        """Get total count of groups"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) as count FROM groups")
+            row = cursor.fetchone()
+            return row['count'] if row else 0
+    
+    def get_all_active_premium_users(self) -> List[Dict[str, Any]]:
+        """Get all active premium subscriptions"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM premium_subscriptions 
+                WHERE is_active = 1 AND end_date > ?
+                ORDER BY end_date DESC
+            """, (datetime.now(),))
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def extend_subscription(self, subscription_id: int, new_end_date: datetime):
+        """Extend an existing subscription"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "UPDATE premium_subscriptions SET end_date = ? WHERE id = ?",
+                (new_end_date, subscription_id)
+            )
+    
+    def create_premium_subscription_manual(
+        self,
+        user_id: int,
+        plan_type: str,
+        start_date: str,
+        end_date: str
+    ) -> int:
+        """Create a new premium subscription with pre-formatted dates (for manual add)"""
+        with self.get_cursor() as cursor:
+            # Deactivate any existing subscription
+            cursor.execute(
+                "UPDATE premium_subscriptions SET is_active = 0 WHERE user_id = ?",
+                (user_id,)
+            )
+            
+            cursor.execute("""
+                INSERT INTO premium_subscriptions 
+                (user_id, plan_type, price_paid, currency, start_date, end_date, is_active, is_renewal)
+                VALUES (?, ?, 0, 'USD', ?, ?, 1, 0)
+            """, (user_id, plan_type, start_date, end_date))
+            
+            return cursor.lastrowid
+
+
 # Global database instance
 db = Database()

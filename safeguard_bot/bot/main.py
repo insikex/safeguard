@@ -55,7 +55,21 @@ from bot.handlers import (
     # Premium handlers
     premium_command,
     premium_callback,
-    check_expired_subscriptions
+    check_expired_subscriptions,
+    
+    # Owner panel handlers
+    admin_panel_command,
+    add_premium_command,
+    remove_premium_command,
+    list_premium_command,
+    owner_panel_callback,
+    
+    # Group management handlers
+    bot_added_to_group_handler,
+    mygroups_command,
+    group_action_callback,
+    group_management_callback,
+    owner_list_groups_command
 )
 
 
@@ -120,6 +134,16 @@ def create_application() -> Application:
     # Premium command
     application.add_handler(CommandHandler("premium", premium_command))
     
+    # Owner panel commands (owner only)
+    application.add_handler(CommandHandler("adminpanel", admin_panel_command))
+    application.add_handler(CommandHandler("addpremium", add_premium_command))
+    application.add_handler(CommandHandler("removepremium", remove_premium_command))
+    application.add_handler(CommandHandler("listpremium", list_premium_command))
+    application.add_handler(CommandHandler("listgroups", owner_list_groups_command))
+    
+    # Group management commands (private chat)
+    application.add_handler(CommandHandler("mygroups", mygroups_command))
+    
     # Broadcast conversation handler (must be before other handlers)
     application.add_handler(create_broadcast_conversation())
     
@@ -139,6 +163,18 @@ def create_application() -> Application:
     application.add_handler(CallbackQueryHandler(
         start_callback,
         pattern=r"^start_"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        owner_panel_callback,
+        pattern=r"^owner_"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        group_action_callback,
+        pattern=r"^grpact_"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        group_management_callback,
+        pattern=r"^grpmgmt_"
     ))
     
     # New member handler (combines verification and bot checking)
@@ -161,11 +197,14 @@ def create_application() -> Application:
 
 
 async def combined_new_member_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Combined handler for new members - handles both verification and bot checking"""
-    # First, handle verification for human users
+    """Combined handler for new members - handles bot joining, verification and bot checking"""
+    # First, check if the bot itself was added to the group
+    await bot_added_to_group_handler(update, context)
+    
+    # Then, handle verification for human users
     await new_member_handler(update, context)
     
-    # Then check for suspicious bots
+    # Finally, check for suspicious bots
     await check_new_bot(update, context)
 
 
