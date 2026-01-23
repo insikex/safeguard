@@ -82,8 +82,9 @@
     "help": {
         "title": "📖 **Safeguard Bot Help**\n\n",
         "admin_commands": "**👮 Admin Commands:**\n/settings - Settings menu\n/warn [reason] - Give warning (reply)\n/unwarn - Remove warning (reply)\n/kick [reason] - Kick user (reply)\n/ban [reason] - Ban user (reply)\n/unban - Unban user (reply)\n/mute [duration] - Mute user (reply)\n/unmute - Unmute user (reply)\n/stats - Group statistics",
-        "user_commands": "**📋 General Commands:**\n/help - This help\n/rules - Group rules\n/mystatus - Your status in group",
-        "footer": "\n\n💡 **Tip:** Reply to a user's message to use admin commands."
+        "user_commands": "**📋 General Commands:**\n/help - This help\n/rules - Group rules\n/mystatus - Your status in group\n/mygroups - View your managed groups",
+        "remote_commands": "**📱 Remote Management:**\nUse admin commands from private chat!\n`/kick @username reason` - Kick user\n`/ban @username reason` - Ban user\n`/mute @username reason` - Mute user\n/mygroups - Select which group to manage",
+        "footer": "\n\n💡 **Tip:** Reply to a user's message in group, or use @username in private chat!"
     },
     "rules": {
         "not_set": "📜 Group rules have not been set by the admin.",
@@ -156,12 +157,37 @@
         "payment_expired": "⏰ Payment has expired. Please create a new payment.",
         "check_error": "❌ Error checking payment status. Please try again."
     },
+    "group_management": {
+        "bot_added": "👮‍♂️ **Hello! I'm @SafeRobot**\n\nThank you {adder} for adding me to **{group}**!\n\n🛡️ I will help protect this group from spam, bots, and malicious users.\n\n**To get started:**\n1️⃣ Make me an admin with necessary permissions\n2️⃣ Click the button below to configure settings\n\n📋 Use /help to see all available commands.",
+        "settings_btn": "⚙️ Open Settings",
+        "loading_groups": "🔄 Loading your groups...",
+        "no_groups": "📭 You don't have any groups where you're an admin and this bot is present.\n\nAdd me to a group and make yourself admin to manage it here!",
+        "your_groups": "📋 **Your Groups** ({count} total)\n\nHere are the groups where you're an admin:",
+        "select_group_hint": "💡 Click a group to view details and manage it.",
+        "select_group_for_action": "📋 **Select Group**\n\nSelect the group where you want to **{command}** `{target}`:",
+        "action_usage": "📝 **Usage:** `/{command} @username [reason]`\n\nOr: `/{command} user_id [reason]`\n\n**Examples:**\n`/{command} @spammer123 Spamming`\n`/{command} 123456789 Advertising`\n\n💡 You can use this command from here (private chat) to manage your groups remotely!",
+        "invalid_target": "❌ Invalid target. Please use @username or numeric user ID.",
+        "searching_user": "🔍 Searching for user @{username}...",
+        "user_not_found": "❌ User @{username} not found. Make sure the user has interacted with this bot before.",
+        "action_success": "✅ **Action Successful!**\n\n👤 User: {user}\n📋 Action: **{action}**\n👪 Group: **{group}**\n📝 Reason: {reason}",
+        "warn_success": "⚠️ **Warning Added!**\n\n👤 User: {user}\n👪 Group: **{group}**\n📊 Warnings: **{current}/{max}**\n📝 Reason: {reason}",
+        "warn_kicked": "🚫 **User Kicked!**\n\n👤 User: {user}\n👪 Group: **{group}**\n📝 Reason: Reached warning limit ({max}x)",
+        "action_cancelled": "❌ Action cancelled.",
+        "action_expired": "⚠️ Action session expired. Please send the command again.",
+        "group_info": "📋 **Group Info**\n\n👪 **{title}**\n🆔 ID: `{chat_id}`\n👥 Members: {members}\n\n**Settings:**\n🔐 Verification: {verification}\n🌊 Anti-Flood: {antiflood}\n🔗 Anti-Link: {antilink}\n🚫 Anti-Spam: {antispam}",
+        "open_settings": "⚙️ Open Settings",
+        "group_not_accessible": "❌ Cannot access this group. The bot may have been removed.",
+        "owner_no_groups": "📭 No groups found in database.",
+        "owner_groups_title": "👪 **All Bot Groups** ({count} total)"
+    },
     "owner_panel": {
         "not_owner": "⚠️ This command is only available for the bot owner.",
         "main_menu": "🛠️ **Owner Admin Panel**\n\n📊 **Bot Statistics:**\n👥 Total Users: **{total_users}**\n⭐ Premium Users: **{total_premium}**\n👪 Groups: **{total_groups}**\n\nSelect an action:",
         "add_premium_btn": "➕ Add Premium User",
         "remove_premium_btn": "➖ Remove Premium",
         "list_premium_btn": "📋 List Premium Users",
+        "list_groups_btn": "👪 List All Groups",
+        "groups_list_title": "👪 **All Bot Groups** ({count} total)",
         "bot_stats_btn": "📊 Bot Statistics",
         "close_btn": "❌ Close",
         "back_btn": "◀️ Back",
