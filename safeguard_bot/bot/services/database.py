@@ -860,6 +860,43 @@ class Database:
             """)
 
 
+    # ==================== Group Management Methods ====================
+    
+    def get_all_groups(self) -> List[Dict[str, Any]]:
+        """Get all groups from database"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT * FROM groups ORDER BY updated_at DESC")
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
+        """Get user by username from database"""
+        with self.get_cursor() as cursor:
+            # Search in users table
+            cursor.execute(
+                "SELECT * FROM users WHERE username = ? LIMIT 1",
+                (username,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+            
+            # Also search in bot_users table
+            cursor.execute(
+                "SELECT * FROM bot_users WHERE username = ? LIMIT 1",
+                (username,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def get_groups_count(self) -> int:
+        """Get total count of groups"""
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) as count FROM groups")
+            row = cursor.fetchone()
+            return row['count'] if row else 0
+    
     # ==================== Owner Panel Methods ====================
     
     def get_total_bot_users(self) -> int:

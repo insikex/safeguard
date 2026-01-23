@@ -63,6 +63,10 @@ async def admin_panel_command(update: Update, context: ContextTypes.DEFAULT_TYPE
             callback_data="owner_list_premium"
         )],
         [InlineKeyboardButton(
+            get_text("owner_panel.list_groups_btn", user),
+            callback_data="owner_list_groups"
+        )],
+        [InlineKeyboardButton(
             get_text("owner_panel.bot_stats_btn", user),
             callback_data="owner_bot_stats"
         )],
@@ -338,6 +342,43 @@ async def owner_panel_callback(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         return
     
+    if data == "owner_list_groups":
+        # Get all groups from database
+        all_groups = db.get_all_groups()
+        
+        if not all_groups:
+            text = get_text("group_management.owner_no_groups", user)
+        else:
+            text = get_text("owner_panel.groups_list_title", user, count=len(all_groups)) + "\n\n"
+            
+            # Check active groups (limit to 15 for callback)
+            active_count = 0
+            for i, g in enumerate(all_groups[:15], 1):
+                try:
+                    chat = await context.bot.get_chat(g['chat_id'])
+                    member_count = await chat.get_member_count()
+                    text += f"{i}. {chat.title} | 👥 {member_count}\n"
+                    active_count += 1
+                except:
+                    text += f"{i}. ❌ {g.get('title', 'Unknown')} (inactive)\n"
+            
+            if len(all_groups) > 15:
+                text += f"\n... +{len(all_groups) - 15} more groups"
+            
+            text += f"\n\n**Total: {len(all_groups)} groups in database**"
+        
+        keyboard = [[InlineKeyboardButton(
+            get_text("owner_panel.back_btn", user),
+            callback_data="owner_back"
+        )]]
+        
+        await query.edit_message_text(
+            text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        return
+    
     if data == "owner_back":
         total_users = db.get_total_bot_users()
         total_premium = db.get_total_premium_users()
@@ -363,6 +404,10 @@ async def owner_panel_callback(update: Update, context: ContextTypes.DEFAULT_TYP
             [InlineKeyboardButton(
                 get_text("owner_panel.list_premium_btn", user),
                 callback_data="owner_list_premium"
+            )],
+            [InlineKeyboardButton(
+                get_text("owner_panel.list_groups_btn", user),
+                callback_data="owner_list_groups"
             )],
             [InlineKeyboardButton(
                 get_text("owner_panel.bot_stats_btn", user),

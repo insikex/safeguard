@@ -65,14 +65,20 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /help command"""
     user = update.effective_user
+    chat = update.effective_chat
     
     text = (
         get_text("help.title", user) +
         get_text("help.admin_commands", user) +
         "\n\n" +
-        get_text("help.user_commands", user) +
-        get_text("help.footer", user)
+        get_text("help.user_commands", user)
     )
+    
+    # Add remote management section only in private chat
+    if chat.type == "private":
+        text += "\n\n" + get_text("help.remote_commands", user)
+    
+    text += get_text("help.footer", user)
     
     await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
@@ -90,6 +96,8 @@ async def start_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             get_text("help.admin_commands", user) +
             "\n\n" +
             get_text("help.user_commands", user) +
+            "\n\n" +
+            get_text("help.remote_commands", user) +
             get_text("help.footer", user)
         )
         
