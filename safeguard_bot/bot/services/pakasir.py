@@ -3,13 +3,15 @@ Pakasir Payment Service
 ========================
 QRIS payment integration using Pakasir.com API for Indonesian users.
 Documentation: https://pakasir.com/p/docs
+
+Pricing follows real-time USD to IDR exchange rates.
 """
 
 import logging
 import httpx
 import io
 import base64
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -21,6 +23,7 @@ except ImportError:
 
 from bot.config import config
 from bot.services.database import db
+from bot.services.exchange_rate import exchange_rate_service, get_current_rate
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +32,35 @@ logger = logging.getLogger(__name__)
 PAKASIR_API_BASE = "https://app.pakasir.com/api"
 
 
-# Premium plan configurations in IDR (Rupiah)
+# Premium plan configurations in USD (converted to IDR at real-time rates)
+PREMIUM_PLANS_USD = {
+    "1_month": {
+        "name": "1 Month Premium",
+        "name_id": "Premium 1 Bulan",
+        "duration_days": 30,
+        "price_usd": 3.0,  # $3 USD
+        "original_price_usd": 3.0,
+        "discount": 0,
+    },
+    "3_months": {
+        "name": "3 Months Premium",
+        "name_id": "Premium 3 Bulan",
+        "duration_days": 90,
+        "price_usd": 6.0,  # $6 USD (33% off from $9)
+        "original_price_usd": 9.0,
+        "discount": 33,  # 33% off
+    },
+    "6_months": {
+        "name": "6 Months Premium",
+        "name_id": "Premium 6 Bulan",
+        "duration_days": 180,
+        "price_usd": 9.0,  # $9 USD (50% off from $18)
+        "original_price_usd": 18.0,
+        "discount": 50,  # 50% off
+    }
+}
+
+# Legacy static IDR pricing (used as fallback if exchange rate unavailable)
 PREMIUM_PLANS_IDR = {
     "1_month": {
         "name": "1 Month Premium",
@@ -88,9 +119,10 @@ class PakasirTransactionStatus:
 
 
 class PakasirService:
-    """Pakasir QRIS Payment Service"""
+    """Pakasir QRIS Payment Service with Real-time Exchange Rates"""
     
     _instance = None
+    _cached_rate: float = 16000.0  # Fallback rate
     
     def __new__(cls):
         if cls._instance is None:
@@ -111,28 +143,152 @@ class PakasirService:
         """Check if Pakasir is properly configured"""
         return bool(self.project_slug) and bool(self.api_key)
     
-    def get_plan_info(self, plan_type: str, lang: str = "id") -> Optional[Dict[str, Any]]:
-        """Get plan information in IDR"""
-        plan = PREMIUM_PLANS_IDR.get(plan_type)
+    async def get_exchange_rate(self) -> Tuple[float, str]:
+        """
+        Get current USD to IDR exchange rate.
+        Returns tuple of (rate, source).
+        """
+        rate, source = await get_current_rate()
+        self._cached_rate = rate  # Cache for sync methods
+        return rate, source
+    
+    def _convert_usd_to_idr(self, usd_amount: float, rate: float) -> int:
+        """
+        Convert USD to IDR and round to nearest 1000.
+        """
+        idr_raw = usd_amount * rate
+        return int(round(idr_raw / 1000) * 1000)
+    
+    async def get_plan_info_dynamic(self, plan_type: str, lang: str = "id") -> Optional[Dict[str, Any]]:
+        """
+        Get plan information with real-time IDR pricing.
+        Uses current USD to IDR exchange rate.
+        """
+        plan = PREMIUM_PLANS_USD.get(plan_type)
         if not plan:
             return None
+        
+        # Get current exchange rate
+        rate, source = await self.get_exchange_rate()
+        
+        # Calculate IDR prices
+        price_idr = self._convert_usd_to_idr(plan["price_usd"], rate)
+        original_price_idr = self._convert_usd_to_idr(plan["original_price_usd"], rate)
         
         name_key = "name_id" if lang == "id" else "name"
         return {
             "type": plan_type,
             "name": plan[name_key],
             "duration_days": plan["duration_days"],
-            "price_idr": plan["price_idr"],
-            "original_price_idr": plan["original_price_idr"],
+            "price_usd": plan["price_usd"],
+            "price_idr": price_idr,
+            "original_price_usd": plan["original_price_usd"],
+            "original_price_idr": original_price_idr,
+            "discount": plan["discount"],
+            "exchange_rate": rate,
+            "rate_source": source
+        }
+    
+    def get_plan_info(self, plan_type: str, lang: str = "id") -> Optional[Dict[str, Any]]:
+        """
+        Get plan information in IDR (sync version, uses cached rate).
+        For async operations, use get_plan_info_dynamic.
+        """
+        plan = PREMIUM_PLANS_USD.get(plan_type)
+        if not plan:
+            # Fallback to legacy static pricing
+            legacy = PREMIUM_PLANS_IDR.get(plan_type)
+            if not legacy:
+                return None
+            name_key = "name_id" if lang == "id" else "name"
+            return {
+                "type": plan_type,
+                "name": legacy[name_key],
+                "duration_days": legacy["duration_days"],
+                "price_idr": legacy["price_idr"],
+                "original_price_idr": legacy["original_price_idr"],
+                "discount": legacy["discount"]
+            }
+        
+        # Use cached rate for sync conversion
+        rate = self._cached_rate
+        price_idr = self._convert_usd_to_idr(plan["price_usd"], rate)
+        original_price_idr = self._convert_usd_to_idr(plan["original_price_usd"], rate)
+        
+        name_key = "name_id" if lang == "id" else "name"
+        return {
+            "type": plan_type,
+            "name": plan[name_key],
+            "duration_days": plan["duration_days"],
+            "price_usd": plan["price_usd"],
+            "price_idr": price_idr,
+            "original_price_usd": plan["original_price_usd"],
+            "original_price_idr": original_price_idr,
             "discount": plan["discount"]
         }
     
-    def get_plan_price(self, plan_type: str, is_renewal: bool = False) -> int:
-        """Get the price for a plan in IDR"""
-        plan = PREMIUM_PLANS_IDR.get(plan_type)
+    async def get_plan_price_dynamic(self, plan_type: str, is_renewal: bool = False) -> Tuple[int, float, float]:
+        """
+        Get the price for a plan in IDR using real-time exchange rate.
+        
+        Returns:
+            Tuple of (price_idr, price_usd, exchange_rate)
+        """
+        plan = PREMIUM_PLANS_USD.get(plan_type)
         if not plan:
-            return 0
-        return plan["price_idr"]
+            return 0, 0.0, 0.0
+        
+        rate, _ = await self.get_exchange_rate()
+        price_idr = self._convert_usd_to_idr(plan["price_usd"], rate)
+        
+        return price_idr, plan["price_usd"], rate
+    
+    def get_plan_price(self, plan_type: str, is_renewal: bool = False) -> int:
+        """
+        Get the price for a plan in IDR (sync version, uses cached rate).
+        For async operations with fresh rate, use get_plan_price_dynamic.
+        """
+        plan = PREMIUM_PLANS_USD.get(plan_type)
+        if not plan:
+            # Fallback to legacy static pricing
+            legacy = PREMIUM_PLANS_IDR.get(plan_type)
+            if not legacy:
+                return 0
+            return legacy["price_idr"]
+        
+        # Use cached rate for sync conversion
+        return self._convert_usd_to_idr(plan["price_usd"], self._cached_rate)
+    
+    def get_usd_price(self, plan_type: str) -> float:
+        """Get the USD price for a plan"""
+        plan = PREMIUM_PLANS_USD.get(plan_type)
+        if not plan:
+            return 0.0
+        return plan["price_usd"]
+    
+    async def get_all_plans_with_prices(self, lang: str = "id") -> Dict[str, Dict[str, Any]]:
+        """
+        Get all plans with real-time pricing information.
+        """
+        rate, source = await self.get_exchange_rate()
+        
+        result = {}
+        for plan_type, plan in PREMIUM_PLANS_USD.items():
+            price_idr = self._convert_usd_to_idr(plan["price_usd"], rate)
+            original_price_idr = self._convert_usd_to_idr(plan["original_price_usd"], rate)
+            
+            name_key = "name_id" if lang == "id" else "name"
+            result[plan_type] = {
+                "name": plan[name_key],
+                "duration_days": plan["duration_days"],
+                "price_usd": plan["price_usd"],
+                "price_idr": price_idr,
+                "original_price_usd": plan["original_price_usd"],
+                "original_price_idr": original_price_idr,
+                "discount": plan["discount"]
+            }
+        
+        return result
     
     def _generate_order_id(self, user_id: int, plan_type: str) -> str:
         """Generate unique order ID"""
@@ -147,19 +303,23 @@ class PakasirService:
     ) -> Optional[PakasirPayment]:
         """
         Create a QRIS payment via Pakasir API.
+        Uses real-time USD to IDR exchange rate.
         Returns payment info with QR string.
         """
         if not self.is_configured:
             logger.error("Pakasir is not configured")
             return None
         
-        plan = PREMIUM_PLANS_IDR.get(plan_type)
+        plan = PREMIUM_PLANS_USD.get(plan_type)
         if not plan:
             logger.error(f"Invalid plan type: {plan_type}")
             return None
         
-        amount = self.get_plan_price(plan_type, is_renewal)
+        # Get real-time price in IDR
+        amount, price_usd, rate = await self.get_plan_price_dynamic(plan_type, is_renewal)
         order_id = self._generate_order_id(user_id, plan_type)
+        
+        logger.info(f"Creating payment for {plan_type}: ${price_usd} USD = Rp {amount:,} IDR (rate: {rate:,.2f})")
         
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
