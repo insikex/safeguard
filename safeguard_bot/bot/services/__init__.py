@@ -11,9 +11,16 @@ from .payment import PaymentService, payment_service, PREMIUM_PLANS, get_premium
 from .pakasir import (
     PakasirService, 
     pakasir_service, 
-    PREMIUM_PLANS_IDR, 
+    PREMIUM_PLANS_IDR,
+    PREMIUM_PLANS_USD,
     get_premium_features_id,
     format_rupiah
+)
+from .exchange_rate import (
+    ExchangeRateService,
+    exchange_rate_service,
+    get_current_rate,
+    usd_to_idr
 )
 
 __all__ = [
@@ -44,6 +51,13 @@ __all__ = [
     "PakasirService",
     "pakasir_service",
     "PREMIUM_PLANS_IDR",
+    "PREMIUM_PLANS_USD",
     "get_premium_features_id",
     "format_rupiah",
+    
+    # Exchange Rate Service
+    "ExchangeRateService",
+    "exchange_rate_service",
+    "get_current_rate",
+    "usd_to_idr",
 ]

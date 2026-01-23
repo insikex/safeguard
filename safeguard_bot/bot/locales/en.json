@@ -130,9 +130,9 @@
         "complete": "**Broadcast Complete!**\n\nTotal: {total} users\nSuccess: {success}\nFailed: {failed}"
     },
     "premium": {
-        "intro": "**🌟 Premium Subscription**\n\nUnlock exclusive features with Premium!\n\n**Premium Features:**\n{features}\n\nClick the button below to view available plans.",
+        "intro": "**🌟 Premium Subscription**\n\nUnlock exclusive features with Premium!\n\n**Premium Features:**\n{features}\n\nClick the button below to view available plans.\n\n💱 _Prices follow real-time USD exchange rate_",
         "active_status": "**✅ Premium Active**\n\nYour Plan: **{plan}**\nExpires: **{end_date}**\nDays Remaining: **{days_left}** days\n\nThank you for supporting us!",
-        "select_plan": "**📋 Select Premium Plan**\n\nChoose your preferred subscription plan:\n\n💳 Payment via **QRIS** (all e-wallets & banks)\n\nAll plans include full access to premium features.",
+        "select_plan": "**📋 Select Premium Plan**\n\nChoose your preferred subscription plan:\n\n💳 Payment via **QRIS** (all e-wallets & banks)\n💱 Prices follow real-time USD exchange rate\n\nAll plans include full access to premium features.",
         "view_plans_btn": "📦 View Plans",
         "extend_btn": "🔄 Extend Subscription",
         "close_btn": "❌ Close",

@@ -3,6 +3,7 @@ Premium Handler
 ===============
 Handler for premium subscription features with Pakasir QRIS payment integration.
 Supports Indonesian users with QRIS payment method.
+Pricing follows real-time USD to IDR exchange rates.
 """
 
 import logging
@@ -16,10 +17,12 @@ from bot.config import config
 from bot.services import get_text, db, detect_lang
 from bot.services.pakasir import (
     pakasir_service, 
-    PREMIUM_PLANS_IDR, 
+    PREMIUM_PLANS_IDR,
+    PREMIUM_PLANS_USD,
     get_premium_features_id,
     format_rupiah
 )
+from bot.services.exchange_rate import exchange_rate_service
 
 logger = logging.getLogger(__name__)
 
@@ -98,21 +101,31 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     if data == "premium_plans":
-        # Show available plans with IDR pricing
+        # Show available plans with real-time IDR pricing
         is_renewal = db.has_previous_subscription(user.id)
         
+        # Get current exchange rate
+        rate, rate_source = await exchange_rate_service.get_usd_to_idr_rate()
+        
+        # Get all plans with dynamic pricing
+        plans_with_prices = await pakasir_service.get_all_plans_with_prices(lang)
+        
+        # Build header with exchange rate info
         text = get_text("premium.select_plan", user)
+        text += f"\n\n📈 **Kurs USD/IDR:** Rp {rate:,.0f}".replace(",", ".")
+        text += f"\n_(Update: {rate_source})_"
         
         keyboard = []
-        for plan_type, plan_info in PREMIUM_PLANS_IDR.items():
-            price = pakasir_service.get_plan_price(plan_type, is_renewal)
-            name = plan_info['name_id']
+        for plan_type, plan_info in plans_with_prices.items():
+            price_idr = plan_info['price_idr']
+            price_usd = plan_info['price_usd']
+            name = plan_info['name']
             
-            # Build button text with IDR price
+            # Build button text with both USD and IDR price
             if plan_info['discount'] > 0:
-                btn_text = f"{name} - {format_rupiah(price)} ({plan_info['discount']}% OFF)"
+                btn_text = f"{name} - ${price_usd:.0f} ({format_rupiah(price_idr)}) -{plan_info['discount']}%"
             else:
-                btn_text = f"{name} - {format_rupiah(price)}"
+                btn_text = f"{name} - ${price_usd:.0f} ({format_rupiah(price_idr)})"
             
             keyboard.append([
                 InlineKeyboardButton(
@@ -192,7 +205,7 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data.startswith("premium_buy_"):
         plan_type = data.replace("premium_buy_", "")
         
-        if plan_type not in PREMIUM_PLANS_IDR:
+        if plan_type not in PREMIUM_PLANS_USD:
             await query.answer(get_text("premium.invalid_plan", user), show_alert=True)
             return
         
@@ -213,7 +226,10 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Check if renewal
         is_renewal = db.has_previous_subscription(user.id)
         
-        # Create QRIS payment via Pakasir
+        # Get plan info with dynamic pricing before creating payment
+        plan_info_dynamic = await pakasir_service.get_plan_info_dynamic(plan_type, lang)
+        
+        # Create QRIS payment via Pakasir (uses real-time exchange rate)
         payment = await pakasir_service.create_qris_payment(
             user_id=user.id,
             plan_type=plan_type,
@@ -234,8 +250,9 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         
         # Get plan info
-        plan_info = PREMIUM_PLANS_IDR[plan_type]
+        plan_info = PREMIUM_PLANS_USD[plan_type]
         name = plan_info['name_id']
+        price_usd = plan_info['price_usd']
         
         # Generate QR code image
         qr_image = pakasir_service.generate_qr_image_bytes(payment.qr_string)
@@ -246,17 +263,26 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except:
             pass
         
-        # Build payment info text
-        text = get_text(
-            "premium.qris_payment_info",
-            user,
-            plan=name,
-            price=format_rupiah(payment.amount),
-            fee=format_rupiah(payment.fee),
-            total=format_rupiah(payment.total_payment),
-            duration=plan_info['duration_days'],
-            order_id=payment.order_id
-        )
+        # Get exchange rate for display
+        rate = plan_info_dynamic.get('exchange_rate', 16000) if plan_info_dynamic else 16000
+        
+        # Build payment info text with USD price included
+        text = f"**📱 Pembayaran QRIS**\n\n"
+        text += f"📦 Paket: **{name}**\n"
+        text += f"💵 Harga USD: **${price_usd:.2f}**\n"
+        text += f"💰 Harga IDR: **{format_rupiah(payment.amount)}**\n"
+        text += f"💳 Biaya Admin: **{format_rupiah(payment.fee)}**\n"
+        text += f"💰 Total Bayar: **{format_rupiah(payment.total_payment)}**\n"
+        text += f"⏱️ Durasi: **{plan_info['duration_days']} hari**\n"
+        text += f"📈 Kurs: **Rp {rate:,.0f}/USD**\n".replace(",", ".")
+        text += f"🆔 Order ID: `{payment.order_id}`\n\n"
+        text += "**Cara Pembayaran:**\n"
+        text += "1️⃣ Scan QR Code di atas\n"
+        text += "2️⃣ Buka aplikasi e-wallet/mobile banking\n"
+        text += "3️⃣ Pilih menu 'Scan QR' atau 'QRIS'\n"
+        text += "4️⃣ Bayar sesuai nominal\n"
+        text += "5️⃣ Klik 'Cek Pembayaran' setelah bayar\n\n"
+        text += "✅ Mendukung: GoPay, OVO, DANA, ShopeePay, LinkAja, BCA, Mandiri, BRI, BNI, dll."
         
         keyboard = [
             [InlineKeyboardButton(
