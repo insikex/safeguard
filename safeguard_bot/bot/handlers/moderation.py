@@ -36,7 +36,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Skip if user is admin
     try:
         member = await chat.get_member(user.id)
-        if member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+        if member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
             # Still track message count
             db.increment_stat(chat.id, "messages")
             return
@@ -302,7 +302,7 @@ async def check_new_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Check if adder is admin
         try:
             adder_member = await chat.get_member(adder.id)
-            if adder_member.status not in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+            if adder_member.status not in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
                 # Non-admin added a bot - kick the bot
                 try:
                     await context.bot.ban_chat_member(chat.id, member.id)

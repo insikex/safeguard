@@ -48,7 +48,7 @@ async def warn_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Can't warn admins
     target_member = await chat.get_member(target.id)
-    if target_member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+    if target_member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
         await update.message.reply_text(
             get_text("admin.cannot_admin", user),
             parse_mode=ParseMode.MARKDOWN
@@ -194,7 +194,7 @@ async def kick_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Can't kick admins
     target_member = await chat.get_member(target.id)
-    if target_member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+    if target_member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
         await update.message.reply_text(
             get_text("admin.cannot_admin", user),
             parse_mode=ParseMode.MARKDOWN
@@ -253,7 +253,7 @@ async def ban_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Can't ban admins
     target_member = await chat.get_member(target.id)
-    if target_member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+    if target_member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
         await update.message.reply_text(
             get_text("admin.cannot_admin", user),
             parse_mode=ParseMode.MARKDOWN
@@ -349,7 +349,7 @@ async def mute_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Can't mute admins
     target_member = await chat.get_member(target.id)
-    if target_member.status in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+    if target_member.status in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
         await update.message.reply_text(
             get_text("admin.cannot_admin", user),
             parse_mode=ParseMode.MARKDOWN
