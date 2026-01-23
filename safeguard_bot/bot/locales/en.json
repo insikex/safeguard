@@ -130,18 +130,19 @@
         "complete": "**Broadcast Complete!**\n\nTotal: {total} users\nSuccess: {success}\nFailed: {failed}"
     },
     "premium": {
-        "intro": "**🌟 Premium Subscription**\n\nUnlock exclusive features with Premium!\n\n**Premium Features:**\n{features}\n\nClick the button below to view available plans.\n\n💱 _Prices follow real-time USD exchange rate_",
+        "intro": "**🌟 Premium Subscription**\n\nUnlock exclusive features with Premium!\n\n**Premium Features:**\n{features}\n\nClick the button below to view available plans.",
         "active_status": "**✅ Premium Active**\n\nYour Plan: **{plan}**\nExpires: **{end_date}**\nDays Remaining: **{days_left}** days\n\nThank you for supporting us!",
-        "select_plan": "**📋 Select Premium Plan**\n\nChoose your preferred subscription plan:\n\n💳 Payment via **QRIS** (all e-wallets & banks)\n💱 Prices follow real-time USD exchange rate\n\nAll plans include full access to premium features.",
+        "select_plan": "**📋 Select Premium Plan**\n\nChoose your preferred subscription plan:\n\nAll plans include full access to premium features.",
         "view_plans_btn": "📦 View Plans",
         "extend_btn": "🔄 Extend Subscription",
         "close_btn": "❌ Close",
         "back_btn": "◀️ Back",
         "invalid_plan": "Invalid plan selected.",
         "payment_not_configured": "Payment system is not configured. Please contact support.",
-        "creating_invoice": "⏳ Creating QRIS payment...",
-        "invoice_error": "❌ Failed to create QRIS payment. Please try again later.",
-        "payment_info": "**Payment Details**\n\nPlan: **{plan}**\nPrice: **${price} USDT**\nDuration: **{duration} days**\n\nClick 'Pay Now' to proceed with payment via CryptoBot.\n\nAfter payment, click 'Check Payment' to activate your premium.",
+        "creating_invoice": "⏳ Creating payment...",
+        "invoice_error": "❌ Failed to create payment. Please try again later.",
+        "payment_info": "**Payment Details**\n\nPlan: **{plan}**\nPrice: **${price}**\nDuration: **{duration} days**\n\nClick 'Pay Now' to proceed with payment.\n\nAfter payment, click 'Check Payment' to activate your premium.",
+        "international_payment": "**💳 Premium Purchase**\n\nFor international payments, please contact our support.\n\nSupported payment methods:\n• Cryptocurrency (USDT, BTC, ETH)\n• PayPal\n• International bank transfer",
         "qris_payment_info": "**📱 QRIS Payment**\n\n📦 Plan: **{plan}**\n💰 Price: **{price}**\n💵 Admin Fee: **{fee}**\n💳 Total Pay: **{total}**\n⏱️ Duration: **{duration} days**\n🆔 Order ID: `{order_id}`\n\n**How to Pay:**\n1️⃣ Scan the QR Code above\n2️⃣ Open your e-wallet/mobile banking app\n3️⃣ Select 'Scan QR' or 'QRIS' menu\n4️⃣ Pay the amount shown\n5️⃣ Click 'Check Payment' after paying\n\n✅ Supports: GoPay, OVO, DANA, ShopeePay, LinkAja, BCA, Mandiri, BRI, BNI, etc.",
         "pay_btn": "💳 Pay Now",
         "check_payment_btn": "🔍 Check Payment",
@@ -150,7 +151,7 @@
         "payment_success": "**🎉 Payment Successful!**\n\nYour Premium subscription is now active.\n\n📦 Plan: **{plan}**\n⏱️ Duration: **{duration} days**\n\nThank you for your purchase! Enjoy all premium features.",
         "processing_error": "❌ Error processing payment. Please try again.",
         "payment_pending": "⏳ Payment not yet received. Please complete the payment first.",
-        "payment_expired": "⏰ QRIS payment has expired. Please create a new payment.",
+        "payment_expired": "⏰ Payment has expired. Please create a new payment.",
         "check_error": "❌ Error checking payment status. Please try again."
     }
 }

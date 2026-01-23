@@ -130,9 +130,9 @@
         "complete": "**Broadcast Selesai!**\n\nTotal: {total} pengguna\nBerhasil: {success}\nGagal: {failed}"
     },
     "premium": {
-        "intro": "**🌟 Langganan Premium**\n\nDapatkan fitur eksklusif dengan Premium!\n\n**Fitur Premium:**\n{features}\n\nKlik tombol di bawah untuk melihat paket yang tersedia.\n\n💱 _Harga mengikuti kurs USD real-time_",
+        "intro": "**🌟 Langganan Premium**\n\nDapatkan fitur eksklusif dengan Premium!\n\n**Fitur Premium:**\n{features}\n\nKlik tombol di bawah untuk melihat paket yang tersedia.\n\n💱 _Harga dalam Rupiah mengikuti kurs USD real-time_",
         "active_status": "**✅ Premium Aktif**\n\nPaket Anda: **{plan}**\nBerakhir: **{end_date}**\nSisa Hari: **{days_left}** hari\n\nTerima kasih atas dukungan Anda!",
-        "select_plan": "**📋 Pilih Paket Premium**\n\nPilih paket langganan yang Anda inginkan:\n\n💳 Pembayaran via **QRIS** (semua e-wallet & bank)\n💱 Harga mengikuti kurs USD real-time\n\nSemua paket termasuk akses penuh ke fitur premium.",
+        "select_plan": "**📋 Pilih Paket Premium**\n\nPilih paket langganan yang Anda inginkan:\n\n💳 Pembayaran via **QRIS** (semua e-wallet & bank)\n\nSemua paket termasuk akses penuh ke fitur premium.",
         "view_plans_btn": "📦 Lihat Paket",
         "extend_btn": "🔄 Perpanjang Langganan",
         "close_btn": "❌ Tutup",
@@ -141,7 +141,8 @@
         "payment_not_configured": "Sistem pembayaran belum dikonfigurasi. Silakan hubungi support.",
         "creating_invoice": "⏳ Membuat QRIS pembayaran...",
         "invoice_error": "❌ Gagal membuat QRIS pembayaran. Silakan coba lagi nanti.",
-        "payment_info": "**Detail Pembayaran**\n\nPaket: **{plan}**\nHarga: **${price} USDT**\nDurasi: **{duration} hari**\n\nKlik 'Bayar Sekarang' untuk melanjutkan pembayaran via CryptoBot.\n\nSetelah pembayaran, klik 'Cek Pembayaran' untuk mengaktifkan premium Anda.",
+        "payment_info": "**Detail Pembayaran**\n\nPaket: **{plan}**\nHarga: **{price}**\nDurasi: **{duration} hari**\n\nKlik 'Bayar Sekarang' untuk melanjutkan pembayaran.\n\nSetelah pembayaran, klik 'Cek Pembayaran' untuk mengaktifkan premium Anda.",
+        "international_payment": "**💳 Pembelian Premium**\n\nUntuk pembayaran internasional, silakan hubungi support kami.\n\nMetode pembayaran yang didukung:\n• Cryptocurrency (USDT, BTC, ETH)\n• PayPal\n• Transfer bank internasional",
         "qris_payment_info": "**📱 Pembayaran QRIS**\n\n📦 Paket: **{plan}**\n💰 Harga: **{price}**\n💵 Biaya Admin: **{fee}**\n💳 Total Bayar: **{total}**\n⏱️ Durasi: **{duration} hari**\n🆔 Order ID: `{order_id}`\n\n**Cara Pembayaran:**\n1️⃣ Scan QR Code di atas\n2️⃣ Buka aplikasi e-wallet/mobile banking\n3️⃣ Pilih menu 'Scan QR' atau 'QRIS'\n4️⃣ Bayar sesuai nominal\n5️⃣ Klik 'Cek Pembayaran' setelah bayar\n\n✅ Mendukung: GoPay, OVO, DANA, ShopeePay, LinkAja, BCA, Mandiri, BRI, BNI, dll.",
         "pay_btn": "💳 Bayar Sekarang",
         "check_payment_btn": "🔍 Cek Pembayaran",

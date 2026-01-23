@@ -38,52 +38,53 @@ PREMIUM_PLANS_USD = {
         "name": "1 Month Premium",
         "name_id": "Premium 1 Bulan",
         "duration_days": 30,
-        "price_usd": 3.0,  # $3 USD
-        "original_price_usd": 3.0,
+        "price_usd": 10.0,  # $10 USD
+        "original_price_usd": 10.0,
         "discount": 0,
     },
     "3_months": {
         "name": "3 Months Premium",
         "name_id": "Premium 3 Bulan",
         "duration_days": 90,
-        "price_usd": 6.0,  # $6 USD (33% off from $9)
-        "original_price_usd": 9.0,
-        "discount": 33,  # 33% off
+        "price_usd": 18.0,  # $18 USD
+        "original_price_usd": 18.0,
+        "discount": 0,
     },
     "6_months": {
         "name": "6 Months Premium",
         "name_id": "Premium 6 Bulan",
         "duration_days": 180,
-        "price_usd": 9.0,  # $9 USD (50% off from $18)
-        "original_price_usd": 18.0,
+        "price_usd": 50.0,  # $50 USD (50% off from $100)
+        "original_price_usd": 100.0,
         "discount": 50,  # 50% off
     }
 }
 
 # Legacy static IDR pricing (used as fallback if exchange rate unavailable)
+# Note: These will be dynamically calculated from USD * exchange rate
 PREMIUM_PLANS_IDR = {
     "1_month": {
         "name": "1 Month Premium",
         "name_id": "Premium 1 Bulan",
         "duration_days": 30,
-        "price_idr": 50000,  # Rp 50.000
-        "original_price_idr": 50000,
+        "price_idr": 160000,  # ~$10 * 16000
+        "original_price_idr": 160000,
         "discount": 0,
     },
     "3_months": {
         "name": "3 Months Premium",
         "name_id": "Premium 3 Bulan",
         "duration_days": 90,
-        "price_idr": 100000,  # Rp 100.000
-        "original_price_idr": 150000,
-        "discount": 33,  # 33% off
+        "price_idr": 288000,  # ~$18 * 16000
+        "original_price_idr": 288000,
+        "discount": 0,
     },
     "6_months": {
         "name": "6 Months Premium",
         "name_id": "Premium 6 Bulan",
         "duration_days": 180,
-        "price_idr": 150000,  # Rp 150.000
-        "original_price_idr": 300000,
+        "price_idr": 800000,  # ~$50 * 16000 (50% off from $100)
+        "original_price_idr": 1600000,
         "discount": 50,  # 50% off
     }
 }
@@ -596,6 +597,13 @@ def format_rupiah(amount: int) -> str:
     return f"Rp {amount:,}".replace(",", ".")
 
 
+def format_usd(amount: float) -> str:
+    """Format amount as USD"""
+    if amount == int(amount):
+        return f"${int(amount)}"
+    return f"${amount:.2f}"
+
+
 # Premium features list for Indonesian market
 PREMIUM_FEATURES_ID = [
     "Proteksi grup tanpa batas",
@@ -610,10 +618,36 @@ PREMIUM_FEATURES_ID = [
     "Ekspor data grup"
 ]
 
+# Premium features list for international users (English)
+PREMIUM_FEATURES_EN = [
+    "Unlimited group protection",
+    "Advanced anti-spam filters",
+    "Custom verification types",
+    "Priority support",
+    "No broadcast messages from bot",
+    "Custom welcome message with media",
+    "Full statistics & analytics",
+    "Whitelist management",
+    "Auto-moderation rules",
+    "Export group data"
+]
+
 
 def get_premium_features_id() -> list:
     """Get list of premium features in Indonesian"""
     return PREMIUM_FEATURES_ID
+
+
+def get_premium_features_en() -> list:
+    """Get list of premium features in English"""
+    return PREMIUM_FEATURES_EN
+
+
+def get_premium_features(lang: str = "en") -> list:
+    """Get premium features based on language"""
+    if lang == "id":
+        return PREMIUM_FEATURES_ID
+    return PREMIUM_FEATURES_EN
 
 
 # Global Pakasir service instance

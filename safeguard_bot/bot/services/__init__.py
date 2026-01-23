@@ -14,7 +14,10 @@ from .pakasir import (
     PREMIUM_PLANS_IDR,
     PREMIUM_PLANS_USD,
     get_premium_features_id,
-    format_rupiah
+    get_premium_features_en,
+    get_premium_features,
+    format_rupiah,
+    format_usd
 )
 from .exchange_rate import (
     ExchangeRateService,
@@ -53,7 +56,10 @@ __all__ = [
     "PREMIUM_PLANS_IDR",
     "PREMIUM_PLANS_USD",
     "get_premium_features_id",
+    "get_premium_features_en",
+    "get_premium_features",
     "format_rupiah",
+    "format_usd",
     
     # Exchange Rate Service
     "ExchangeRateService",

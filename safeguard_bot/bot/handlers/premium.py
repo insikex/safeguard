@@ -2,8 +2,8 @@
 Premium Handler
 ===============
 Handler for premium subscription features with Pakasir QRIS payment integration.
-Supports Indonesian users with QRIS payment method.
-Pricing follows real-time USD to IDR exchange rates.
+- Indonesian users: Shows IDR prices only (calculated from USD * real-time exchange rate)
+- International users: Shows USD prices only
 """
 
 import logging
@@ -13,24 +13,36 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFi
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 
-from bot.config import config
+from bot.config import config, INDONESIAN_CODES
 from bot.services import get_text, db, detect_lang
 from bot.services.pakasir import (
     pakasir_service, 
     PREMIUM_PLANS_IDR,
     PREMIUM_PLANS_USD,
     get_premium_features_id,
-    format_rupiah
+    get_premium_features_en,
+    format_rupiah,
+    format_usd
 )
 from bot.services.exchange_rate import exchange_rate_service
 
 logger = logging.getLogger(__name__)
 
 
+def is_indonesian_user(user) -> bool:
+    """Check if user is Indonesian based on Telegram language settings"""
+    if user is None:
+        return False
+    lang_code = getattr(user, 'language_code', None) or ''
+    lang_code = lang_code.lower().split('-')[0]
+    return lang_code in INDONESIAN_CODES
+
+
 async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /premium command - Show premium menu"""
     user = update.effective_user
     lang = detect_lang(user)
+    is_indonesian = is_indonesian_user(user)
     
     # Check if user has active premium
     subscription = db.get_premium_subscription(user.id)
@@ -59,8 +71,11 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )]
         ]
     else:
-        # Show premium features and plans
-        features = get_premium_features_id()
+        # Show premium features and plans based on language
+        if is_indonesian:
+            features = get_premium_features_id()
+        else:
+            features = get_premium_features_en()
         features_text = "\n".join([f"• {f}" for f in features])
         
         text = get_text(
@@ -101,8 +116,9 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     if data == "premium_plans":
-        # Show available plans with real-time IDR pricing
+        # Show available plans - IDR for Indonesian users, USD for international
         is_renewal = db.has_previous_subscription(user.id)
+        is_indonesian = is_indonesian_user(user)
         
         # Get current exchange rate
         rate, rate_source = await exchange_rate_service.get_usd_to_idr_rate()
@@ -110,22 +126,34 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Get all plans with dynamic pricing
         plans_with_prices = await pakasir_service.get_all_plans_with_prices(lang)
         
-        # Build header with exchange rate info
+        # Build header based on user region
         text = get_text("premium.select_plan", user)
-        text += f"\n\n📈 **Kurs USD/IDR:** Rp {rate:,.0f}".replace(",", ".")
-        text += f"\n_(Update: {rate_source})_"
+        
+        if is_indonesian:
+            # Show exchange rate info for Indonesian users
+            text += f"\n\n📈 **Kurs USD/IDR:** Rp {rate:,.0f}".replace(",", ".")
+            text += f"\n_(Update: {rate_source})_"
         
         keyboard = []
         for plan_type, plan_info in plans_with_prices.items():
             price_idr = plan_info['price_idr']
             price_usd = plan_info['price_usd']
             name = plan_info['name']
+            discount = plan_info['discount']
             
-            # Build button text with both USD and IDR price
-            if plan_info['discount'] > 0:
-                btn_text = f"{name} - ${price_usd:.0f} ({format_rupiah(price_idr)}) -{plan_info['discount']}%"
+            # Build button text based on user region
+            if is_indonesian:
+                # Indonesian users: Show IDR only
+                if discount > 0:
+                    btn_text = f"{name} - {format_rupiah(price_idr)} (-{discount}%)"
+                else:
+                    btn_text = f"{name} - {format_rupiah(price_idr)}"
             else:
-                btn_text = f"{name} - ${price_usd:.0f} ({format_rupiah(price_idr)})"
+                # International users: Show USD only
+                if discount > 0:
+                    btn_text = f"{name} - ${price_usd:.0f} (-{discount}%)"
+                else:
+                    btn_text = f"{name} - ${price_usd:.0f}"
             
             keyboard.append([
                 InlineKeyboardButton(
@@ -151,6 +179,7 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "premium_back":
         # Go back to main premium menu
         subscription = db.get_premium_subscription(user.id)
+        is_indonesian = is_indonesian_user(user)
         
         if subscription:
             end_date = datetime.fromisoformat(subscription['end_date'])
@@ -175,7 +204,11 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )]
             ]
         else:
-            features = get_premium_features_id()
+            # Show features based on language
+            if is_indonesian:
+                features = get_premium_features_id()
+            else:
+                features = get_premium_features_en()
             features_text = "\n".join([f"• {f}" for f in features])
             
             text = get_text(
@@ -204,11 +237,52 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if data.startswith("premium_buy_"):
         plan_type = data.replace("premium_buy_", "")
+        is_indonesian = is_indonesian_user(user)
         
         if plan_type not in PREMIUM_PLANS_USD:
             await query.answer(get_text("premium.invalid_plan", user), show_alert=True)
             return
         
+        # For Indonesian users, use QRIS payment
+        # For international users, show info that QRIS is for Indonesia only
+        if not is_indonesian:
+            # International users: Show USD price info
+            plan_info = PREMIUM_PLANS_USD[plan_type]
+            price_usd = plan_info['price_usd']
+            name = plan_info['name']
+            discount = plan_info['discount']
+            
+            text = get_text("premium.international_payment", user)
+            if not text or text.startswith("["):
+                # Fallback if translation not found
+                text = f"**💳 Premium Purchase**\n\n"
+                text += f"📦 Plan: **{name}**\n"
+                text += f"💵 Price: **${price_usd:.0f}**\n"
+                if discount > 0:
+                    text += f"🏷️ Discount: **{discount}% OFF!**\n"
+                text += f"⏱️ Duration: **{plan_info['duration_days']} days**\n\n"
+                text += "📧 **Payment Instructions:**\n"
+                text += "For international payments, please contact our support.\n\n"
+                text += "Supported payment methods:\n"
+                text += "• Cryptocurrency (USDT, BTC, ETH)\n"
+                text += "• PayPal\n"
+                text += "• International bank transfer"
+            
+            keyboard = [
+                [InlineKeyboardButton(
+                    get_text("premium.back_btn", user),
+                    callback_data="premium_plans"
+                )]
+            ]
+            
+            await query.edit_message_text(
+                text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+            return
+        
+        # Indonesian users: Process QRIS payment
         # Check if Pakasir is configured
         if not pakasir_service.is_configured:
             await query.answer(
@@ -266,11 +340,10 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Get exchange rate for display
         rate = plan_info_dynamic.get('exchange_rate', 16000) if plan_info_dynamic else 16000
         
-        # Build payment info text with USD price included
+        # Build payment info text for Indonesian users (IDR only)
         text = f"**📱 Pembayaran QRIS**\n\n"
         text += f"📦 Paket: **{name}**\n"
-        text += f"💵 Harga USD: **${price_usd:.2f}**\n"
-        text += f"💰 Harga IDR: **{format_rupiah(payment.amount)}**\n"
+        text += f"💰 Harga: **{format_rupiah(payment.amount)}**\n"
         text += f"💳 Biaya Admin: **{format_rupiah(payment.fee)}**\n"
         text += f"💰 Total Bayar: **{format_rupiah(payment.total_payment)}**\n"
         text += f"⏱️ Durasi: **{plan_info['duration_days']} hari**\n"
