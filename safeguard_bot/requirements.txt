@@ -3,7 +3,7 @@
 # ===========================================
 
 # Telegram Bot API
-python-telegram-bot[job-queue]==21.0.1
+python-telegram-bot[job-queue]==21.11.1
 
 # Environment Variables
 python-dotenv==1.0.0
