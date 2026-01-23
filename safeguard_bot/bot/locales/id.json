@@ -155,5 +155,30 @@
         "payment_pending": "⏳ Pembayaran belum diterima. Silakan selesaikan pembayaran terlebih dahulu.",
         "payment_expired": "⏰ Invoice pembayaran telah kedaluwarsa. Silakan buat pembayaran baru.",
         "check_error": "❌ Error mengecek status pembayaran. Silakan coba lagi."
+    },
+    "owner_panel": {
+        "not_owner": "⚠️ Perintah ini hanya tersedia untuk pemilik bot.",
+        "main_menu": "🛠️ **Panel Admin Owner**\n\n📊 **Statistik Bot:**\n👥 Total User: **{total_users}**\n⭐ User Premium: **{total_premium}**\n👪 Grup: **{total_groups}**\n\nPilih aksi:",
+        "add_premium_btn": "➕ Tambah User Premium",
+        "remove_premium_btn": "➖ Hapus Premium",
+        "list_premium_btn": "📋 Daftar User Premium",
+        "bot_stats_btn": "📊 Statistik Bot",
+        "close_btn": "❌ Tutup",
+        "back_btn": "◀️ Kembali",
+        "addpremium_usage": "📝 **Penggunaan:** `/addpremium <user_id> <hari>`\n\n**Contoh:**\n`/addpremium 123456789 30`\n\nIni akan memberikan 30 hari premium ke user 123456789.",
+        "removepremium_usage": "📝 **Penggunaan:** `/removepremium <user_id>`\n\n**Contoh:**\n`/removepremium 123456789`\n\nIni akan menghapus premium dari user 123456789.",
+        "invalid_args": "❌ Argumen tidak valid. Harap berikan user ID dan jumlah hari yang valid.",
+        "invalid_user_id": "❌ User ID tidak valid. Harap berikan user ID numerik yang valid.",
+        "invalid_days": "❌ Jumlah hari tidak valid. Harap berikan angka antara 1 dan 365.",
+        "premium_added": "✅ **Premium Ditambahkan!**\n\n👤 User: **{user_name}**\n🆔 ID: `{user_id}`\n⏱️ Durasi: **{days} hari**\n\nPremium telah diaktifkan.",
+        "premium_granted": "🎉 **Selamat!**\n\nAnda telah diberikan langganan Premium selama **{days} hari** oleh pemilik bot!\n\nNikmati semua fitur premium.",
+        "premium_add_failed": "❌ Gagal menambahkan premium. Silakan coba lagi.",
+        "no_premium": "ℹ️ User `{user_id}` tidak memiliki langganan premium aktif.",
+        "premium_removed": "✅ **Premium Dihapus!**\n\n👤 User: **{user_name}**\n🆔 ID: `{user_id}`\n\nLangganan premium telah dinonaktifkan.",
+        "no_premium_users": "📭 Tidak ada user premium aktif ditemukan.",
+        "premium_list_title": "📋 **User Premium Aktif**",
+        "add_premium_help": "➕ **Tambah User Premium**\n\nUntuk menambahkan premium ke user, kirim perintah berikut:\n\n`/addpremium <user_id> <hari>`\n\n**Contoh:**\n`/addpremium 123456789 30`\n\nUntuk mendapatkan ID user, mereka bisa menggunakan /start dan Anda akan melihat ID mereka di log, atau mereka bisa forward pesan dari diri sendiri ke @userinfobot.",
+        "remove_premium_help": "➖ **Hapus Premium**\n\nUntuk menghapus premium dari user, kirim perintah berikut:\n\n`/removepremium <user_id>`\n\n**Contoh:**\n`/removepremium 123456789`",
+        "bot_stats": "📊 **Statistik Bot**\n\n👥 Total User: **{total_users}**\n⭐ User Premium: **{total_premium}**\n👪 Grup: **{total_groups}**"
     }
 }

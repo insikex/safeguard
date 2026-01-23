@@ -30,6 +30,13 @@ from .premium import (
     check_expired_subscriptions,
     is_premium_user
 )
+from .owner_panel import (
+    admin_panel_command,
+    add_premium_command,
+    remove_premium_command,
+    list_premium_command,
+    owner_panel_callback
+)
 
 __all__ = [
     # Start handlers
@@ -71,4 +78,11 @@ __all__ = [
     "premium_callback",
     "check_expired_subscriptions",
     "is_premium_user",
+    
+    # Owner panel handlers
+    "admin_panel_command",
+    "add_premium_command",
+    "remove_premium_command",
+    "list_premium_command",
+    "owner_panel_callback",
 ]

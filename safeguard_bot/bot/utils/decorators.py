@@ -26,7 +26,7 @@ def admin_required(func: Callable):
         
         user = await update.effective_chat.get_member(update.effective_user.id)
         
-        if user.status not in [ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR]:
+        if user.status not in [ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR]:
             await update.message.reply_text(
                 get_text("admin.not_admin", update.effective_user)
             )
@@ -49,7 +49,7 @@ def creator_required(func: Callable):
         
         user = await update.effective_chat.get_member(update.effective_user.id)
         
-        if user.status != ChatMemberStatus.CREATOR:
+        if user.status != ChatMemberStatus.OWNER:
             await update.message.reply_text(
                 get_text("admin.not_creator", update.effective_user)
             )

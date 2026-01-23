@@ -155,5 +155,30 @@
         "payment_pending": "⏳ Payment not yet received. Please complete the payment first.",
         "payment_expired": "⏰ Payment has expired. Please create a new payment.",
         "check_error": "❌ Error checking payment status. Please try again."
+    },
+    "owner_panel": {
+        "not_owner": "⚠️ This command is only available for the bot owner.",
+        "main_menu": "🛠️ **Owner Admin Panel**\n\n📊 **Bot Statistics:**\n👥 Total Users: **{total_users}**\n⭐ Premium Users: **{total_premium}**\n👪 Groups: **{total_groups}**\n\nSelect an action:",
+        "add_premium_btn": "➕ Add Premium User",
+        "remove_premium_btn": "➖ Remove Premium",
+        "list_premium_btn": "📋 List Premium Users",
+        "bot_stats_btn": "📊 Bot Statistics",
+        "close_btn": "❌ Close",
+        "back_btn": "◀️ Back",
+        "addpremium_usage": "📝 **Usage:** `/addpremium <user_id> <days>`\n\n**Example:**\n`/addpremium 123456789 30`\n\nThis will give 30 days of premium to user 123456789.",
+        "removepremium_usage": "📝 **Usage:** `/removepremium <user_id>`\n\n**Example:**\n`/removepremium 123456789`\n\nThis will remove premium from user 123456789.",
+        "invalid_args": "❌ Invalid arguments. Please provide valid user ID and number of days.",
+        "invalid_user_id": "❌ Invalid user ID. Please provide a valid numeric user ID.",
+        "invalid_days": "❌ Invalid number of days. Please provide a number between 1 and 365.",
+        "premium_added": "✅ **Premium Added!**\n\n👤 User: **{user_name}**\n🆔 ID: `{user_id}`\n⏱️ Duration: **{days} days**\n\nPremium has been activated successfully.",
+        "premium_granted": "🎉 **Congratulations!**\n\nYou have been granted **{days} days** of Premium subscription by the bot owner!\n\nEnjoy all premium features.",
+        "premium_add_failed": "❌ Failed to add premium. Please try again.",
+        "no_premium": "ℹ️ User `{user_id}` does not have an active premium subscription.",
+        "premium_removed": "✅ **Premium Removed!**\n\n👤 User: **{user_name}**\n🆔 ID: `{user_id}`\n\nPremium subscription has been deactivated.",
+        "no_premium_users": "📭 No active premium users found.",
+        "premium_list_title": "📋 **Active Premium Users**",
+        "add_premium_help": "➕ **Add Premium User**\n\nTo add premium to a user, send the following command:\n\n`/addpremium <user_id> <days>`\n\n**Example:**\n`/addpremium 123456789 30`\n\nTo get a user's ID, they can use /start and you'll see their ID in the logs, or they can forward a message from themselves to @userinfobot.",
+        "remove_premium_help": "➖ **Remove Premium**\n\nTo remove premium from a user, send the following command:\n\n`/removepremium <user_id>`\n\n**Example:**\n`/removepremium 123456789`",
+        "bot_stats": "📊 **Bot Statistics**\n\n👥 Total Users: **{total_users}**\n⭐ Premium Users: **{total_premium}**\n👪 Groups: **{total_groups}**"
     }
 }

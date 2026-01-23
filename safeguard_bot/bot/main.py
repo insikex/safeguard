@@ -55,7 +55,14 @@ from bot.handlers import (
     # Premium handlers
     premium_command,
     premium_callback,
-    check_expired_subscriptions
+    check_expired_subscriptions,
+    
+    # Owner panel handlers
+    admin_panel_command,
+    add_premium_command,
+    remove_premium_command,
+    list_premium_command,
+    owner_panel_callback
 )
 
 
@@ -120,6 +127,12 @@ def create_application() -> Application:
     # Premium command
     application.add_handler(CommandHandler("premium", premium_command))
     
+    # Owner panel commands (owner only)
+    application.add_handler(CommandHandler("adminpanel", admin_panel_command))
+    application.add_handler(CommandHandler("addpremium", add_premium_command))
+    application.add_handler(CommandHandler("removepremium", remove_premium_command))
+    application.add_handler(CommandHandler("listpremium", list_premium_command))
+    
     # Broadcast conversation handler (must be before other handlers)
     application.add_handler(create_broadcast_conversation())
     
@@ -139,6 +152,10 @@ def create_application() -> Application:
     application.add_handler(CallbackQueryHandler(
         start_callback,
         pattern=r"^start_"
+    ))
+    application.add_handler(CallbackQueryHandler(
+        owner_panel_callback,
+        pattern=r"^owner_"
     ))
     
     # New member handler (combines verification and bot checking)
