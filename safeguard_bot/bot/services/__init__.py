@@ -8,6 +8,23 @@ from .language import LanguageService, lang_service, get_text, detect_lang, set_
 from .database import Database, db
 from .captcha import CaptchaService, captcha_service, CaptchaType, CaptchaChallenge
 from .payment import PaymentService, payment_service, PREMIUM_PLANS, get_premium_features
+from .pakasir import (
+    PakasirService, 
+    pakasir_service, 
+    PREMIUM_PLANS_IDR,
+    PREMIUM_PLANS_USD,
+    get_premium_features_id,
+    get_premium_features_en,
+    get_premium_features,
+    format_rupiah,
+    format_usd
+)
+from .exchange_rate import (
+    ExchangeRateService,
+    exchange_rate_service,
+    get_current_rate,
+    usd_to_idr
+)
 
 __all__ = [
     # Language
@@ -27,9 +44,26 @@ __all__ = [
     "CaptchaType",
     "CaptchaChallenge",
     
-    # Payment
+    # Payment (Legacy CryptoBot)
     "PaymentService",
     "payment_service",
     "PREMIUM_PLANS",
     "get_premium_features",
+    
+    # Pakasir Payment (QRIS Indonesia)
+    "PakasirService",
+    "pakasir_service",
+    "PREMIUM_PLANS_IDR",
+    "PREMIUM_PLANS_USD",
+    "get_premium_features_id",
+    "get_premium_features_en",
+    "get_premium_features",
+    "format_rupiah",
+    "format_usd",
+    
+    # Exchange Rate Service
+    "ExchangeRateService",
+    "exchange_rate_service",
+    "get_current_rate",
+    "usd_to_idr",
 ]

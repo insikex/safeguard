@@ -1,15 +1,18 @@
 """
-Web Server for Portal Verification
-===================================
-Optional web server for portal-based verification.
+Web Server for Portal Verification & Pakasir Webhook
+=====================================================
+Optional web server for portal-based verification and Pakasir payment webhooks.
 """
 
 import asyncio
+import logging
 from aiohttp import web
 from typing import Optional
 
 from bot.config import config
 from bot.services import db
+
+logger = logging.getLogger(__name__)
 
 
 class VerificationServer:
@@ -26,6 +29,8 @@ class VerificationServer:
         self.app.router.add_get('/verify', self.verify_page)
         self.app.router.add_post('/verify', self.verify_submit)
         self.app.router.add_get('/health', self.health_check)
+        # Pakasir webhook endpoint
+        self.app.router.add_post('/webhook/pakasir', self.pakasir_webhook)
     
     async def index(self, request: web.Request) -> web.Response:
         """Index page"""
@@ -192,6 +197,79 @@ class VerificationServer:
     async def health_check(self, request: web.Request) -> web.Response:
         """Health check endpoint"""
         return web.json_response({"status": "ok"})
+    
+    async def pakasir_webhook(self, request: web.Request) -> web.Response:
+        """
+        Handle Pakasir payment webhook.
+        
+        Pakasir sends POST with JSON body:
+        {
+            "amount": 22000,
+            "order_id": "240910HDE7C9",
+            "project": "project_slug",
+            "status": "completed",
+            "payment_method": "qris",
+            "completed_at": "2024-09-10T08:07:02.819+07:00"
+        }
+        """
+        try:
+            data = await request.json()
+            
+            logger.info(f"Received Pakasir webhook: {data}")
+            
+            order_id = data.get("order_id")
+            amount = data.get("amount")
+            status = data.get("status")
+            project = data.get("project")
+            completed_at = data.get("completed_at")
+            
+            if not all([order_id, amount, status]):
+                logger.error(f"Invalid webhook data: {data}")
+                return web.json_response({"error": "Invalid data"}, status=400)
+            
+            # Check if payment exists in database
+            payment = db.get_pakasir_payment_by_order(order_id)
+            if not payment:
+                logger.warning(f"Payment not found for order: {order_id}")
+                return web.json_response({"error": "Payment not found"}, status=404)
+            
+            # Verify amount matches
+            if payment['amount'] != amount:
+                logger.warning(f"Amount mismatch for order {order_id}: expected {payment['amount']}, got {amount}")
+                return web.json_response({"error": "Amount mismatch"}, status=400)
+            
+            if status == "completed":
+                # Update payment status
+                db.update_pakasir_payment_status(order_id, 'completed', completed_at)
+                
+                # Check if this is a renewal
+                from bot.services.pakasir import PREMIUM_PLANS_IDR
+                
+                is_renewal = db.has_previous_subscription(payment['user_id'])
+                
+                # Get plan info
+                plan = PREMIUM_PLANS_IDR.get(payment['plan_type'])
+                if plan:
+                    # Create premium subscription
+                    db.create_premium_subscription(
+                        user_id=payment['user_id'],
+                        plan_type=payment['plan_type'],
+                        price_paid=payment['amount'],
+                        duration_days=plan['duration_days'],
+                        currency="IDR",
+                        is_renewal=is_renewal
+                    )
+                    
+                    logger.info(f"Premium activated for user {payment['user_id']} via webhook, order {order_id}")
+                else:
+                    logger.error(f"Invalid plan type: {payment['plan_type']}")
+                    return web.json_response({"error": "Invalid plan"}, status=400)
+            
+            return web.json_response({"status": "ok"})
+            
+        except Exception as e:
+            logger.error(f"Error processing Pakasir webhook: {e}")
+            return web.json_response({"error": str(e)}, status=500)
     
     async def _error_page(self, message: str) -> web.Response:
         """Error page"""

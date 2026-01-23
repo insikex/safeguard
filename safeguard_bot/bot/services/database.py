@@ -205,6 +205,24 @@ class Database:
                 )
             """)
             
+            # Pakasir payments table (QRIS Indonesia)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS pakasir_payments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    order_id TEXT UNIQUE,
+                    plan_type TEXT,
+                    amount INTEGER,
+                    fee INTEGER DEFAULT 0,
+                    total_payment INTEGER,
+                    qr_string TEXT,
+                    status TEXT DEFAULT 'pending',
+                    expired_at TEXT,
+                    completed_at TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
             
             # Create indexes
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_chat ON users(chat_id)")
@@ -215,6 +233,9 @@ class Database:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_premium_active ON premium_subscriptions(is_active)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pakasir_user ON pakasir_payments(user_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pakasir_order ON pakasir_payments(order_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pakasir_status ON pakasir_payments(status)")
     
     # ==================== Group Methods ====================
     
@@ -739,6 +760,104 @@ class Database:
                 return dict(row)
         return None
     
+    # ==================== Pakasir Payment Methods ====================
+    
+    def create_pakasir_payment(
+        self,
+        user_id: int,
+        order_id: str,
+        plan_type: str,
+        amount: int,
+        fee: int,
+        total_payment: int,
+        qr_string: str,
+        expired_at: str
+    ) -> int:
+        """Create a new Pakasir QRIS payment record"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO pakasir_payments 
+                (user_id, order_id, plan_type, amount, fee, total_payment, qr_string, status, expired_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+            """, (user_id, order_id, plan_type, amount, fee, total_payment, qr_string, expired_at))
+            return cursor.lastrowid
+    
+    def get_pakasir_payment_by_order(self, order_id: str) -> Optional[Dict[str, Any]]:
+        """Get Pakasir payment by order ID"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM pakasir_payments WHERE order_id = ?",
+                (order_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def get_pakasir_payment_by_id(self, payment_id: int) -> Optional[Dict[str, Any]]:
+        """Get Pakasir payment by ID"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM pakasir_payments WHERE id = ?",
+                (payment_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def get_user_pending_pakasir_payment(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get user's pending Pakasir payment"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM pakasir_payments WHERE user_id = ? AND status = 'pending' ORDER BY created_at DESC LIMIT 1",
+                (user_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+        return None
+    
+    def update_pakasir_payment_status(self, order_id: str, status: str, completed_at: str = None):
+        """Update Pakasir payment status"""
+        with self.get_cursor() as cursor:
+            if completed_at:
+                cursor.execute(
+                    "UPDATE pakasir_payments SET status = ?, completed_at = ? WHERE order_id = ?",
+                    (status, completed_at, order_id)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE pakasir_payments SET status = ? WHERE order_id = ?",
+                    (status, order_id)
+                )
+    
+    def get_user_pakasir_payments(self, user_id: int) -> List[Dict[str, Any]]:
+        """Get all Pakasir payments for a user"""
+        with self.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM pakasir_payments WHERE user_id = ? ORDER BY created_at DESC",
+                (user_id,)
+            )
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def get_expired_pakasir_payments(self) -> List[Dict[str, Any]]:
+        """Get all expired pending Pakasir payments"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM pakasir_payments 
+                WHERE status = 'pending' AND expired_at < datetime('now')
+            """)
+            return [dict(row) for row in cursor.fetchall()]
+    
+    def cleanup_expired_pakasir_payments(self):
+        """Mark expired Pakasir payments as expired"""
+        with self.get_cursor() as cursor:
+            cursor.execute("""
+                UPDATE pakasir_payments 
+                SET status = 'expired' 
+                WHERE status = 'pending' AND expired_at < datetime('now')
+            """)
 
 
 # Global database instance

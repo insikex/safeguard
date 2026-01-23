@@ -31,14 +31,24 @@ class BotConfig:
     # Database settings
     database_url: str = field(default_factory=lambda: os.getenv("DATABASE_URL", "sqlite:///safeguard.db"))
     
-    # CryptoBot Payment Settings
+    # CryptoBot Payment Settings (Legacy - kept for compatibility)
     cryptobot_token: str = field(default_factory=lambda: os.getenv("CRYPTOBOT_TOKEN", ""))
     cryptobot_testnet: bool = field(default_factory=lambda: os.getenv("CRYPTOBOT_TESTNET", "false").lower() == "true")
     
-    # Premium Pricing (in USD)
-    premium_price_1_month: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_1_MONTH", "10")))
-    premium_price_3_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_3_MONTHS", "18")))
-    premium_price_6_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_6_MONTHS", "50")))
+    # Pakasir Payment Settings (QRIS Indonesia)
+    pakasir_project_slug: str = field(default_factory=lambda: os.getenv("PAKASIR_PROJECT_SLUG", ""))
+    pakasir_api_key: str = field(default_factory=lambda: os.getenv("PAKASIR_API_KEY", ""))
+    pakasir_sandbox: bool = field(default_factory=lambda: os.getenv("PAKASIR_SANDBOX", "true").lower() == "true")
+    
+    # Premium Pricing (in IDR - Rupiah for Indonesia)
+    premium_price_1_month_idr: int = field(default_factory=lambda: int(os.getenv("PREMIUM_PRICE_1_MONTH_IDR", "50000")))
+    premium_price_3_months_idr: int = field(default_factory=lambda: int(os.getenv("PREMIUM_PRICE_3_MONTHS_IDR", "100000")))
+    premium_price_6_months_idr: int = field(default_factory=lambda: int(os.getenv("PREMIUM_PRICE_6_MONTHS_IDR", "150000")))
+    
+    # Premium Pricing (in USD - converted to IDR using real-time exchange rate)
+    premium_price_1_month: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_1_MONTH", "10")))  # $10
+    premium_price_3_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_3_MONTHS", "18")))  # $18
+    premium_price_6_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_6_MONTHS", "50")))  # $50 (50% off from $100)
     
     # Verification settings
     verification_timeout: int = field(default_factory=lambda: int(os.getenv("VERIFICATION_TIMEOUT", "120")))
