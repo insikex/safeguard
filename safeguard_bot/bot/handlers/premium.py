@@ -1,18 +1,25 @@
 """
 Premium Handler
 ===============
-Handler for premium subscription features with CryptoBot payment integration.
+Handler for premium subscription features with Pakasir QRIS payment integration.
+Supports Indonesian users with QRIS payment method.
 """
 
 import logging
+import io
 from datetime import datetime, timedelta
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 
 from bot.config import config
 from bot.services import get_text, db, detect_lang
-from bot.services.payment import payment_service, PREMIUM_PLANS, get_premium_features
+from bot.services.pakasir import (
+    pakasir_service, 
+    PREMIUM_PLANS_IDR, 
+    get_premium_features_id,
+    format_rupiah
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +57,7 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
     else:
         # Show premium features and plans
-        features = get_premium_features(lang)
+        features = get_premium_features_id()
         features_text = "\n".join([f"• {f}" for f in features])
         
         text = get_text(
@@ -91,21 +98,21 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     if data == "premium_plans":
-        # Show available plans
+        # Show available plans with IDR pricing
         is_renewal = db.has_previous_subscription(user.id)
         
         text = get_text("premium.select_plan", user)
         
         keyboard = []
-        for plan_type, plan_info in PREMIUM_PLANS.items():
-            price = payment_service.get_plan_price(plan_type, is_renewal)
-            name = plan_info['name_id'] if lang == 'id' else plan_info['name']
+        for plan_type, plan_info in PREMIUM_PLANS_IDR.items():
+            price = pakasir_service.get_plan_price(plan_type, is_renewal)
+            name = plan_info['name_id']
             
-            # Build button text
+            # Build button text with IDR price
             if plan_info['discount'] > 0:
-                btn_text = f"{name} - ${price} ({plan_info['discount']}% OFF)"
+                btn_text = f"{name} - {format_rupiah(price)} ({plan_info['discount']}% OFF)"
             else:
-                btn_text = f"{name} - ${price}"
+                btn_text = f"{name} - {format_rupiah(price)}"
             
             keyboard.append([
                 InlineKeyboardButton(
@@ -155,7 +162,7 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )]
             ]
         else:
-            features = get_premium_features(lang)
+            features = get_premium_features_id()
             features_text = "\n".join([f"• {f}" for f in features])
             
             text = get_text(
@@ -185,12 +192,12 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data.startswith("premium_buy_"):
         plan_type = data.replace("premium_buy_", "")
         
-        if plan_type not in PREMIUM_PLANS:
+        if plan_type not in PREMIUM_PLANS_IDR:
             await query.answer(get_text("premium.invalid_plan", user), show_alert=True)
             return
         
-        # Check if CryptoBot is configured
-        if not payment_service.is_configured:
+        # Check if Pakasir is configured
+        if not pakasir_service.is_configured:
             await query.answer(
                 get_text("premium.payment_not_configured", user),
                 show_alert=True
@@ -206,14 +213,14 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Check if renewal
         is_renewal = db.has_previous_subscription(user.id)
         
-        # Create invoice
-        invoice = await payment_service.create_invoice(
+        # Create QRIS payment via Pakasir
+        payment = await pakasir_service.create_qris_payment(
             user_id=user.id,
             plan_type=plan_type,
             is_renewal=is_renewal
         )
         
-        if not invoice:
+        if not payment:
             await query.edit_message_text(
                 get_text("premium.invoice_error", user),
                 parse_mode=ParseMode.MARKDOWN,
@@ -227,26 +234,34 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         
         # Get plan info
-        plan_info = PREMIUM_PLANS[plan_type]
-        price = payment_service.get_plan_price(plan_type, is_renewal)
-        name = plan_info['name_id'] if lang == 'id' else plan_info['name']
+        plan_info = PREMIUM_PLANS_IDR[plan_type]
+        name = plan_info['name_id']
         
+        # Generate QR code image
+        qr_image = pakasir_service.generate_qr_image_bytes(payment.qr_string)
+        
+        # Delete the loading message
+        try:
+            await query.message.delete()
+        except:
+            pass
+        
+        # Build payment info text
         text = get_text(
-            "premium.payment_info",
+            "premium.qris_payment_info",
             user,
             plan=name,
-            price=price,
-            duration=plan_info['duration_days']
+            price=format_rupiah(payment.amount),
+            fee=format_rupiah(payment.fee),
+            total=format_rupiah(payment.total_payment),
+            duration=plan_info['duration_days'],
+            order_id=payment.order_id
         )
         
         keyboard = [
             [InlineKeyboardButton(
-                get_text("premium.pay_btn", user),
-                url=invoice.bot_invoice_url
-            )],
-            [InlineKeyboardButton(
                 get_text("premium.check_payment_btn", user),
-                callback_data=f"premium_check_{invoice.invoice_id}_{plan_type}"
+                callback_data=f"premium_qris_check_{payment.order_id}"
             )],
             [InlineKeyboardButton(
                 get_text("premium.cancel_btn", user),
@@ -254,39 +269,66 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )]
         ]
         
-        await query.edit_message_text(
-            text,
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+        if qr_image:
+            # Send QR code as photo with caption
+            await context.bot.send_photo(
+                chat_id=user.id,
+                photo=InputFile(io.BytesIO(qr_image), filename="qris_payment.png"),
+                caption=text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        else:
+            # Fallback: Send text only if QR generation fails
+            text += f"\n\n⚠️ QR Code tidak dapat ditampilkan. Gunakan string berikut di aplikasi QRIS:\n`{payment.qr_string[:50]}...`"
+            await context.bot.send_message(
+                chat_id=user.id,
+                text=text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
         return
     
-    if data.startswith("premium_check_"):
-        parts = data.split("_")
-        if len(parts) < 4:
-            await query.answer(get_text("premium.invalid_data", user), show_alert=True)
+    if data.startswith("premium_qris_check_"):
+        order_id = data.replace("premium_qris_check_", "")
+        
+        # Get payment from database
+        payment_record = db.get_pakasir_payment_by_order(order_id)
+        if not payment_record:
+            await query.answer(
+                get_text("premium.invalid_data", user),
+                show_alert=True
+            )
             return
         
-        invoice_id = int(parts[2])
-        plan_type = parts[3]
-        
         # Check payment status
-        status = await payment_service.check_invoice(invoice_id)
+        status = await pakasir_service.check_payment_status(
+            order_id=order_id,
+            amount=payment_record['amount']
+        )
         
-        if status == "paid":
+        if status and status.status == "completed":
             # Process payment
-            success = await payment_service.process_payment(invoice_id)
+            success = await pakasir_service.process_payment(order_id)
             
             if success:
-                plan_info = PREMIUM_PLANS[plan_type]
-                name = plan_info['name_id'] if lang == 'id' else plan_info['name']
+                plan_info = PREMIUM_PLANS_IDR.get(payment_record['plan_type'], {})
+                name = plan_info.get('name_id', payment_record['plan_type'])
                 
-                await query.edit_message_text(
-                    get_text(
+                # Delete the QR code message
+                try:
+                    await query.message.delete()
+                except:
+                    pass
+                
+                # Send success message
+                await context.bot.send_message(
+                    chat_id=user.id,
+                    text=get_text(
                         "premium.payment_success",
                         user,
                         plan=name,
-                        duration=plan_info['duration_days']
+                        duration=plan_info.get('duration_days', 30)
                     ),
                     parse_mode=ParseMode.MARKDOWN,
                     reply_markup=InlineKeyboardMarkup([[
@@ -301,14 +343,22 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     get_text("premium.processing_error", user),
                     show_alert=True
                 )
-        elif status == "active":
+        elif status and status.status == "pending":
             await query.answer(
                 get_text("premium.payment_pending", user),
                 show_alert=True
             )
-        elif status == "expired":
-            await query.edit_message_text(
-                get_text("premium.payment_expired", user),
+        elif status and status.status == "expired":
+            # Delete the QR code message
+            try:
+                await query.message.delete()
+            except:
+                pass
+            
+            # Send expired message
+            await context.bot.send_message(
+                chat_id=user.id,
+                text=get_text("premium.payment_expired", user),
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton(
@@ -324,28 +374,42 @@ async def premium_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
 
-async def handle_paid_invoice(invoice):
-    """Handle webhook callback when invoice is paid"""
+async def handle_pakasir_webhook(webhook_data: dict) -> bool:
+    """
+    Handle Pakasir webhook callback when payment is completed.
+    Called from web server endpoint.
+    """
     try:
-        # Parse payload
-        payload = invoice.payload
-        parts = payload.split(":")
-        if len(parts) != 3:
-            logger.error(f"Invalid payload format: {payload}")
-            return
+        order_id = webhook_data.get("order_id")
+        amount = webhook_data.get("amount")
+        status = webhook_data.get("status")
+        project = webhook_data.get("project")
         
-        user_id = int(parts[0])
-        plan_type = parts[1]
-        is_renewal = parts[2] == "1"
+        if not all([order_id, amount, status]):
+            logger.error(f"Invalid webhook data: {webhook_data}")
+            return False
+        
+        # Verify project matches our configuration
+        if project != pakasir_service.project_slug:
+            logger.warning(f"Project mismatch: {project} != {pakasir_service.project_slug}")
+            return False
+        
+        if status != "completed":
+            logger.info(f"Webhook status not completed: {status}")
+            return False
         
         # Process payment
-        success = await payment_service.process_payment(invoice.invoice_id)
+        success = await pakasir_service.process_payment(order_id)
         
         if success:
-            logger.info(f"Premium activated for user {user_id} via webhook")
+            logger.info(f"Premium activated for order {order_id} via webhook")
+            return True
+        
+        return False
         
     except Exception as e:
-        logger.error(f"Error handling paid invoice webhook: {e}")
+        logger.error(f"Error handling Pakasir webhook: {e}")
+        return False
 
 
 async def check_expired_subscriptions(context: ContextTypes.DEFAULT_TYPE):
@@ -362,7 +426,7 @@ async def check_expired_subscriptions(context: ContextTypes.DEFAULT_TYPE):
         try:
             await context.bot.send_message(
                 chat_id=sub['user_id'],
-                text="Your premium subscription has expired. Renew now to continue enjoying premium features!\n\nUse /premium to view available plans.",
+                text="Langganan premium Anda telah berakhir. Perpanjang sekarang untuk terus menikmati fitur premium!\n\nGunakan /premium untuk melihat paket yang tersedia.",
                 parse_mode=ParseMode.MARKDOWN
             )
         except Exception as e:
@@ -370,6 +434,9 @@ async def check_expired_subscriptions(context: ContextTypes.DEFAULT_TYPE):
     
     if expired:
         logger.info(f"Processed {len(expired)} expired subscriptions")
+    
+    # Also cleanup expired Pakasir payments
+    db.cleanup_expired_pakasir_payments()
 
 
 def is_premium_user(user_id: int) -> bool:

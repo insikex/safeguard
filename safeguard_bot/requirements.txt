@@ -8,11 +8,13 @@ python-telegram-bot[job-queue]==21.0.1
 # Environment Variables
 python-dotenv==1.0.0
 
-# HTTP Client (for portal verification)
+# HTTP Client (for portal verification & Pakasir API)
 aiohttp==3.9.1
-
-# Additional utilities
 httpx==0.27.0
 
-# CryptoBot Payment Gateway (Crypto Pay API)
+# QR Code generation (for QRIS payment)
+qrcode[pil]==7.4.2
+Pillow>=10.0.0
+
+# CryptoBot Payment Gateway (Legacy - Optional)
 aiocryptopay==0.4.3
