@@ -45,10 +45,10 @@ class BotConfig:
     premium_price_3_months_idr: int = field(default_factory=lambda: int(os.getenv("PREMIUM_PRICE_3_MONTHS_IDR", "100000")))
     premium_price_6_months_idr: int = field(default_factory=lambda: int(os.getenv("PREMIUM_PRICE_6_MONTHS_IDR", "150000")))
     
-    # Legacy Premium Pricing (in USD - kept for compatibility)
-    premium_price_1_month: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_1_MONTH", "10")))
-    premium_price_3_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_3_MONTHS", "18")))
-    premium_price_6_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_6_MONTHS", "50")))
+    # Premium Pricing (in USD - converted to IDR using real-time exchange rate)
+    premium_price_1_month: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_1_MONTH", "10")))  # $10
+    premium_price_3_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_3_MONTHS", "18")))  # $18
+    premium_price_6_months: float = field(default_factory=lambda: float(os.getenv("PREMIUM_PRICE_6_MONTHS", "50")))  # $50 (50% off from $100)
     
     # Verification settings
     verification_timeout: int = field(default_factory=lambda: int(os.getenv("VERIFICATION_TIMEOUT", "120")))
